@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stitch Stash</title>
+<meta name="description" content="Track your DMC floss, turn pictures into cross-stitch patterns, and see what to buy.">
+<meta name="theme-color" content="#f5efe4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Stitch Stash">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5efe4;--paper:#fffdf8;--ink:#2b2420;--muted:#7a6e64;--line:#e6dccb;--accent:#b4434a;--accent-d:#963238;--green:#2f6b5e;--amber:#b7791f;--red:#b4434a;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);
+ background-image:radial-gradient(rgba(90,70,50,.10) 1px,transparent 1.3px);background-size:7px 7px;min-height:100vh;font-size:15px}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:700;margin:0;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+header{position:sticky;top:0;z-index:20;background:rgba(245,239,228,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.hwrap{max-width:1240px;margin:0 auto;padding:12px 20px;padding-top:calc(12px + env(safe-area-inset-top));display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-size:24px}
+nav{display:flex;gap:4px;background:#ebe2d2;padding:4px;border-radius:999px;flex-wrap:wrap}
+nav a{padding:7px 14px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:500;font-size:14px;white-space:nowrap}
+nav a.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+nav a .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:5px;border-radius:9px;background:var(--accent);color:#fff;font-size:11px;line-height:18px;text-align:center}
+.badge[hidden]{display:none!important}
+.sync{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:#bbb}
+.dot.ok{background:#3c9a6e}.dot.warn{background:#d39b2a}.dot.bad{background:var(--red)}
+main{max-width:1240px;margin:0 auto;padding:22px 20px 80px}
+section{display:none}section.on{display:block}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--paper);padding:8px 14px;border-radius:10px;font-weight:500;font-size:14px}
+.btn:hover{border-color:#cfc2ac}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-d)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--red)}
+.btn:disabled{opacity:.5;cursor:default}
+input[type=text],input[type=search],select,textarea{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#c9a98a;box-shadow:0 0 0 3px rgba(180,67,74,.12)}
+.seg{display:inline-flex;background:#ebe2d2;border-radius:10px;padding:3px}
+.seg button{border:0;background:transparent;padding:6px 12px;border-radius:8px;font-size:13.5px;color:var(--muted);font-weight:500}
+.seg button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.pagehead h2{font-size:28px}
+.stats{display:flex;gap:22px}
+.stat b{display:block;font-family:Fraunces,serif;font-size:24px}
+.stat span{font-size:12.5px;color:var(--muted)}
+.banner{padding:10px 14px;border-radius:10px;background:#fbf0d9;border:1px solid #efd9a8;font-size:13.5px;margin-bottom:14px;display:none}
+.banner.on{display:block}
+/* floss */
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input[type=search]{flex:1;min-width:200px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.fcard{display:flex;align-items:center;gap:11px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:9px 10px}
+.fcard.owned{border-color:#d9c7a6;box-shadow:inset 3px 0 0 var(--green)}
+.sw{width:34px;height:34px;border-radius:9px;flex:none;border:1px solid rgba(0,0,0,.12);position:relative;overflow:hidden}
+.sw::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.18) 0 3px,rgba(0,0,0,.06) 3px 6px)}
+.sw.sm{width:20px;height:20px;border-radius:5px}
+.finfo{flex:1;min-width:0}
+.finfo b{font-size:14.5px}
+.finfo div{font-size:12.5px;color:var(--muted);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.step{display:flex;align-items:center;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex:none}
+.step button{border:0;background:#f6f0e5;width:28px;height:30px;font-size:16px;line-height:1}
+.step button:hover{background:#ece2d0}
+.step span{width:30px;text-align:center;font-weight:600;font-size:14px}
+.step.zero span{color:#b9ad9e}
+details.bulk{margin-bottom:14px}
+details.bulk summary{cursor:pointer;color:var(--muted);font-size:14px}
+details.bulk textarea{width:100%;min-height:70px;margin:10px 0}
+.empty{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty h3{color:var(--ink);font-size:20px;margin-bottom:6px}
+/* new pattern */
+.newgrid{display:grid;grid-template-columns:320px 1fr;gap:18px;align-items:start}
+@media (max-width:860px){.newgrid{grid-template-columns:1fr}}
+.drop{border:2px dashed #d5c6ac;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#fffaf1;transition:.15s}
+.drop.over{border-color:var(--accent);background:#fdf0ef}
+.drop img{max-width:100%;max-height:180px;border-radius:8px;display:block;margin:0 auto 8px}
+.field{margin-top:16px}
+.field label.l{display:flex;justify-content:space-between;font-weight:600;font-size:13.5px;margin-bottom:6px}
+.field label.l span{font-weight:500;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.check{display:flex;gap:9px;align-items:flex-start;margin-top:12px;font-size:14px;cursor:pointer}
+.check input{margin-top:3px;accent-color:var(--accent)}
+.check small{display:block;color:var(--muted);font-size:12.5px}
+/* viewer */
+.vhead{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.vhead input.name{font-family:Fraunces,serif;font-size:22px;font-weight:700;border-color:transparent;background:transparent;padding:4px 8px;margin-left:-8px;min-width:0;flex:1}
+.vhead input.name:hover{border-color:var(--line)}
+.vtools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:13.5px}
+.vtools label{display:flex;gap:6px;align-items:center;color:var(--muted)}
+.vtools input[type=range]{width:110px}
+.chartwrap{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:10px;background:#f3eee4}
+.chartwrap canvas{display:block;image-rendering:pixelated}
+.summary{display:flex;gap:16px;flex-wrap:wrap;margin:16px 0 8px;font-size:14px}
+.pill{padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.pill.ok{background:#e1f0ea;color:var(--green)}
+.pill.part{background:#fbefd6;color:#8a5a12}
+.pill.need{background:#f8e1e2;color:var(--red)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid #f0e8da;vertical-align:middle}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.lg{cursor:pointer}
+tr.lg:hover td{background:#fbf6ec}
+tr.lg.hl td{background:#fdf0ef}
+.sym{display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:5px;font-size:14px;background:#fff}
+.tablewrap{overflow-x:auto}
+/* patterns */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.pcard{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;text-align:left;padding:0;transition:.15s}
+.pcard:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(60,40,20,.10)}
+.pthumb{height:160px;background:#efe8db;display:flex;align-items:center;justify-content:center}
+.pthumb canvas{max-width:100%;max-height:150px;image-rendering:pixelated}
+.pmeta{padding:11px 13px}
+.pmeta b{font-family:Fraunces,serif;font-size:16.5px;display:block;margin-bottom:4px}
+.back{margin-bottom:14px}
+/* shopping */
+.shopgrid{display:grid;grid-template-columns:280px 1fr;gap:18px;align-items:start}
+@media (max-width:860px){.shopgrid{grid-template-columns:1fr}}
+.plist label{display:flex;gap:9px;align-items:center;padding:7px 0;border-bottom:1px solid #f0e8da;font-size:14px;cursor:pointer}
+.plist label:last-child{border:0}
+.plist input{accent-color:var(--accent)}
+.ptools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:#fbf6ec;border:1px solid var(--line);border-radius:10px}
+.ptools .vbrush{display:inline-flex;gap:6px;align-items:center}
+.dlg{position:fixed;inset:0;background:rgba(40,30,20,.38);display:flex;align-items:center;justify-content:center;z-index:40;padding:16px}
+.dlg[hidden]{display:none}
+.dlgbox{width:min(600px,100%);max-height:86vh;overflow:auto;box-shadow:0 20px 50px rgba(40,25,10,.25)}
+.swgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:6px}
+.swopt{display:flex;gap:8px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 8px;text-align:left;font-size:13px;line-height:1.25}
+.swopt:hover{border-color:var(--accent);background:#fdf6f3}
+.swopt small{display:block;color:var(--muted);font-size:11.5px}
+
+.setgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+.flabel{display:flex;flex-direction:column;gap:5px;font-weight:600;font-size:13.5px;margin-top:12px}
+.flabel input{font-weight:400;width:100%}
+.howto{margin:4px 0 6px}.howto summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--accent)}
+.howto ol{padding-left:20px;font-size:14px;line-height:1.55;margin:10px 0}
+nav a svg{display:none}
+.newgrid>*,.shopgrid>*,.setgrid>*{min-width:0}
+html{-webkit-tap-highlight-color:transparent}
+@media (max-width:860px){.setgrid{grid-template-columns:1fr}}
+@media (max-width:700px){
+ body{font-size:15px}
+ .hwrap{padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top))}
+ .brand h1{font-size:21px}
+ header{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--bg)}
+ nav{position:fixed;left:0;right:0;bottom:0;z-index:30;border-radius:0;background:rgba(255,253,248,.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:5px 4px calc(5px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,1fr);gap:0}
+ nav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;padding:6px 2px;border-radius:10px;position:relative;white-space:nowrap}
+ nav a.on{background:transparent;box-shadow:none;color:var(--accent)}
+ nav a svg{display:block}
+ nav a .badge{position:absolute;top:1px;left:calc(50% + 7px);margin:0;font-size:10px;min-width:16px;line-height:16px}
+ main{padding:16px 14px calc(92px + env(safe-area-inset-bottom))}
+ .pagehead{margin-bottom:12px}.pagehead h2{font-size:24px}
+ .stats{gap:16px}.stat b{font-size:20px}
+ .panel{padding:14px}
+ .fgrid{grid-template-columns:1fr;gap:8px}
+ .step button{width:40px;height:38px;font-size:18px}.step span{width:34px}
+ input[type=text],input[type=search],input[type=password],select,textarea{font-size:16px}
+ #toast{bottom:calc(86px + env(safe-area-inset-bottom))}
+ .vhead input.name{font-size:19px}
+ .vtools,.ptools{gap:8px}
+ .ptools{padding:8px}
+ .seg button{padding:7px 10px}
+ .chartwrap{max-height:62vh}
+ table{font-size:13px}td,th{padding:6px 5px}
+ .shopgrid,.newgrid{gap:12px}
+ .dlg{align-items:flex-end;padding:0}
+ .dlgbox{border-radius:18px 18px 0 0;max-height:88vh;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#2b2420;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:90vw}
+#toast.on{opacity:1;transform:translateX(-50%)}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid #ddd;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ro .step button,.ro .needsw{display:none!important}
+@media (max-width:700px){#toast{bottom:calc(86px + env(safe-area-inset-bottom))}}
+</style>
+</head>
+<body>
+<header><div class="hwrap">
+ <div class="brand">
+  <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect x="1" y="1" width="28" height="28" rx="7" fill="#b4434a"/><path d="M8 8l14 14M22 8L8 22" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/></svg>
+  <h1>Stitch Stash</h1>
+ </div>
+ <nav>
+  <a href="#floss" data-tab="floss"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M6 7h12M6 17h12M9 10l6 4M15 10l-6 4"/></svg>My floss</a>
+  <a href="#new" data-tab="new"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg>New pattern</a>
+  <a href="#patterns" data-tab="patterns"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Patterns</a>
+  <a href="#shopping" data-tab="shopping"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>Shopping<span class="badge" id="shopBadge" hidden></span></a>
+  <a href="#settings" data-tab="settings"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</a>
+ </nav>
+ <a class="sync" href="#settings" style="text-decoration:none"><span class="dot" id="syncDot"></span><span id="syncText">On this device</span></a>
+</div></header>
+
+<main>
+<div class="banner" id="banner"></div>
+
+<!-- FLOSS -->
+<section id="tab-floss">
+ <div class="pagehead">
+  <div><h2>My floss</h2><div class="muted small">Skeins on hand. Tap + and − as you buy and use them up.</div></div>
+  <div class="stats">
+   <div class="stat"><b id="stColors">0</b><span>colours owned</span></div>
+   <div class="stat"><b id="stSkeins">0</b><span>skeins total</span></div>
+  </div>
+ </div>
+ <div class="toolbar">
+  <input type="search" id="fSearch" placeholder="Search by number or name, e.g. 310 or “dusty rose”">
+  <div class="seg" id="fShow"><button data-v="owned">What I own</button><button data-v="all" class="on">All DMC colours</button></div>
+ </div>
+ <details class="bulk needsw" id="bulk">
+  <summary>Add several at once</summary>
+  <textarea id="bulkText" placeholder="Paste or type DMC numbers separated by spaces or commas, e.g. 310 321 666 Ecru B5200"></textarea>
+  <div class="row"><button class="btn primary" id="bulkAdd">Add one skein of each</button><span class="small muted" id="bulkMsg"></span></div>
+ </details>
+ <div class="fgrid" id="fGrid"></div>
+</section>
+
+<!-- NEW -->
+<section id="tab-new">
+ <div class="pagehead"><div><h2>New pattern</h2><div class="muted small">Turn a photo or picture into a chart matched to DMC colours.</div></div></div>
+ <div class="newgrid">
+  <div class="panel">
+   <div class="drop" id="drop">
+    <div id="dropInner"><b>Choose an image</b><div class="small muted">or drop one here · JPG, PNG, GIF, WebP</div></div>
+    <input type="file" id="file" accept="image/*" hidden>
+   </div>
+   <div class="field">
+    <label class="l">Width <span id="wLbl">80 stitches</span></label>
+    <input type="range" id="optW" min="20" max="200" value="80">
+    <div class="small muted" id="sizeLbl"></div>
+   </div>
+   <div class="field">
+    <label class="l">Fabric</label>
+    <select id="optCount" style="width:100%">
+     <option value="11">11-count Aida</option><option value="14" selected>14-count Aida</option><option value="16">16-count Aida</option><option value="18">18-count Aida</option><option value="22">22-count Hardanger</option><option value="28">28-count evenweave (over 1)</option>
+    </select>
+   </div>
+   <div class="field">
+    <label class="l">Maximum colours <span id="cLbl">20</span></label>
+    <input type="range" id="optC" min="2" max="60" value="20">
+   </div>
+   <label class="check"><input type="checkbox" id="optOwned"><span>Only use floss I already own<small>Matches every colour to something in your stash.</small></span></label>
+   <label class="check"><input type="checkbox" id="optTidy" checked><span>Tidy up<small>Drops colours used only a handful of times and smooths lone “confetti” stitches.</small></span></label>
+   <label class="check"><input type="checkbox" id="optDither"><span>Blend gradients (dithering)<small>Smoother for photos, but more colour changes to stitch.</small></span></label>
+   <label class="check"><input type="checkbox" id="optBg"><span>Remove background<small>Leaves the area around the subject unstitched, working in from the edges of the picture.</small></span></label>
+   <div class="field" id="bgTolWrap" hidden style="margin-top:8px;padding-left:24px">
+    <label class="l">Background strength <span id="tolLbl">15</span></label>
+    <input type="range" id="optTol" min="3" max="45" value="15">
+    <div class="small muted">Increase it if bits of background are left behind; decrease it if parts of the subject disappear.</div>
+   </div>
+   <label class="check"><input type="checkbox" id="optTrans" checked><span>Leave transparent areas unstitched</span></label>
+  </div>
+  <div id="newResult"><div class="panel empty"><h3>No image yet</h3>Choose a picture on the left. Simple images with clear shapes make the best patterns; photos work well at 100+ stitches wide.</div></div>
+ </div>
+</section>
+
+<!-- PATTERNS -->
+<section id="tab-patterns">
+ <div id="patListWrap">
+  <div class="pagehead"><div><h2>Patterns</h2><div class="muted small">Everything you’ve saved. Open one to see the chart and what floss it needs.</div></div></div>
+  <div class="pgrid" id="pGrid"></div>
+ </div>
+ <div id="patView" hidden></div>
+</section>
+
+<!-- SHOPPING -->
+<section id="tab-shopping">
+ <div class="pagehead"><div><h2>Shopping list</h2><div class="muted small">Floss needed for the patterns you’re planning, minus what you already have.</div></div>
+  <div class="row"><button class="btn" id="copyShop">Copy list</button><button class="btn" id="csvShop">Download CSV</button></div></div>
+ <div class="shopgrid">
+  <div class="panel"><h3 style="font-size:17px;margin-bottom:8px">Planned patterns</h3><div class="plist" id="shopPats"></div></div>
+  <div class="panel" id="shopBody"></div>
+ </div>
+</section>
+<!-- SETTINGS -->
+<section id="tab-settings">
+ <div class="pagehead"><div><h2>Settings</h2><div class="muted small">Backups and syncing with GitHub.</div></div></div>
+ <div class="setgrid">
+  <div class="panel">
+   <h3 style="font-size:19px;margin-bottom:6px">Sync with GitHub</h3>
+   <div id="syncOff">
+    <p class="small muted" style="margin-top:0">Optional. Keeps a copy of your floss and patterns in a private GitHub repository, so they’re backed up and the same on every device you use.</p>
+    <details class="howto"><summary>How to set it up (about 5 minutes)</summary>
+     <ol>
+      <li>On GitHub, create a new repository called <b>stitchstash-data</b>. Set it to <b>Private</b>.</li>
+      <li>Go to <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens</b>, and tap <b>Generate new token</b>.</li>
+      <li>Give it a name, choose an expiration (e.g. 1 year), and under <b>Repository access</b> pick <b>Only select repositories</b> → <b>stitchstash-data</b>.</li>
+      <li>Under <b>Permissions → Repository permissions</b>, set <b>Contents</b> to <b>Read and write</b>.</li>
+      <li>Tap <b>Generate token</b>, copy it, and paste it below.</li>
+     </ol>
+     <p class="small muted">Do the same Connect step on each device you use, with the same repository and token.</p>
+    </details>
+    <form id="syncForm" autocomplete="off">
+     <label class="flabel">Repository<input type="text" id="ghRepo" placeholder="your-username/stitchstash-data" autocapitalize="off" spellcheck="false"></label>
+     <label class="flabel">Access token<input type="password" id="ghToken" placeholder="github_pat_…" autocapitalize="off" spellcheck="false"></label>
+     <div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Connect</button><span class="small muted" id="syncMsg"></span></div>
+    </form>
+   </div>
+   <div id="syncOn" hidden>
+    <p style="margin-top:0">Syncing with <b id="syncRepo"></b>. <span class="muted" id="syncWhen"></span></p>
+    <p class="small" id="syncErr" hidden style="color:var(--red)"></p>
+    <div class="row"><button class="btn" id="syncNowBtn">Sync now</button><button class="btn danger" id="syncDisc">Disconnect</button></div>
+    <p class="small muted">Changes sync a few seconds after you make them, when you open the app, and every minute while it’s open. Offline changes sync when you’re back online.</p>
+   </div>
+  </div>
+  <div class="panel">
+   <h3 style="font-size:19px;margin-bottom:6px">Backup</h3>
+   <p class="small muted" style="margin-top:0" id="dataSummary"></p>
+   <div class="row"><button class="btn" id="exportBtn">Export backup</button><button class="btn" id="importBtn">Import backup</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>
+   <p class="small muted">Importing merges the backup with what’s already here — nothing is deleted.</p>
+   <h3 style="font-size:19px;margin:20px 0 6px">Install on your phone</h3>
+   <p class="small muted" style="margin:0"><b>iPhone/iPad:</b> open this page in Safari, tap Share, then <b>Add to Home Screen</b>.<br><b>Android:</b> in Chrome, tap ⋮ then <b>Install app</b> or <b>Add to Home screen</b>.</p>
+  </div>
+ </div>
+</section>
+</main>
+<div id="swapDlg" class="dlg" hidden><div class="panel dlgbox" role="dialog" aria-modal="true" aria-labelledby="swapTitle">
+ <div class="row" style="justify-content:space-between;margin-bottom:12px"><h3 id="swapTitle" style="font-size:19px"></h3><button class="btn ghost" id="swapClose" aria-label="Close">✕</button></div>
+ <div class="small muted" style="margin-bottom:6px;font-weight:600">Colours already in this pattern</div>
+ <div class="swgrid" id="swapPat"></div>
+ <div class="small muted" style="margin:14px 0 6px;font-weight:600">Any DMC colour</div>
+ <input type="search" id="swapQ" placeholder="Search by number or name, e.g. 310 or black" style="width:100%;margin-bottom:8px">
+ <div class="swgrid" id="swapAll"></div>
+</div></div>
+<div id="toast"></div>
+
+<script>
+const DMC_RAW=`B5200|Snow White|FFFFFF
+White|White|FCFBF8
+Ecru|Ecru|F0EADA
+150|Ultra Very Dark Dusty Rose|AB0249
+151|Very Light Dusty Rose|F0CED4
+152|Medium Light Shell Pink|E2A099
+153|Very Light Violet|E6CCD9
+154|Very Dark Grape|572433
+155|Medium Dark Blue Violet|9891B6
+156|Medium Light Blue Violet|A3AED1
+157|Very Light Cornflower Blue|BBC3D9
+158|Medium Very Dark Cornflower Blue|4C526E
+159|Light Gray Blue|C7CAD7
+160|Medium Gray Blue|999FB7
+161|Gray Blue|787C9F
+162|Ultra Very Light Blue|DBECF5
+163|Medium Celadon Green|4D8361
+164|Light Forest Green|C8D8B8
+165|Very Light Moss Green|EFF4A4
+166|Medium Light Moss Green|C0C840
+167|Very Dark Yellow Beige|A77C49
+168|Very Light Pewter|D1D1D1
+169|Light Pewter|848484
+208|Very Dark Lavender|835B8B
+209|Dark Lavender|A37BA7
+210|Medium Lavender|C39FC3
+211|Light Lavender|E3CBE3
+221|Very Dark Shell Pink|883E43
+223|Light Shell Pink|CC847C
+224|Very Light Shell Pink|EBB7AF
+225|Ultra Very Light Shell Pink|FFDFD5
+300|Very Dark Mahogany|6F2F00
+301|Medium Mahogany|B35F2B
+304|Medium Red|B71F33
+307|Lemon|FDED54
+309|Dark Rose|BA4A4A
+310|Black|000000
+311|Medium Navy Blue|1C5066
+312|Very Dark Baby Blue|35668B
+315|Medium Dark Antique Mauve|814952
+316|Medium Antique Mauve|B7737F
+317|Pewter Gray|6C6C6C
+318|Light Steel Gray|ABABAB
+319|Very Dark Pistachio Green|205F2E
+320|Medium Pistachio Green|69885A
+321|Red|C72B3B
+322|Dark Baby Blue|5A8FB8
+326|Very Dark Rose|B33B4B
+327|Dark Violet|633666
+333|Very Dark Blue Violet|5C5478
+334|Medium Baby Blue|739FC1
+335|Rose|EE546E
+336|Navy Blue|253B73
+340|Medium Blue Violet|ADA7C7
+341|Light Blue Violet|B7BFDD
+347|Very Dark Salmon|BF2D2D
+349|Dark Coral|D21035
+350|Medium Coral|E04848
+351|Coral|E96A67
+352|Light Coral|FD9C97
+353|Peach|FED7CC
+355|Dark Terra Cotta|984436
+356|Medium Terra Cotta|C56A5B
+367|Dark Pistachio Green|617A52
+368|Light Pistachio Green|A6C298
+369|Very Light Pistachio Green|D7EDCC
+370|Medium Mustard|B89D64
+371|Mustard|BFA671
+372|Light Mustard|CCB784
+400|Dark Mahogany|8F430F
+402|Very Light Mahogany|F7A777
+407|Dark Desert Sand|BB8172
+413|Dark Pewter Gray|565656
+414|Dark Steel Gray|8C8C8C
+415|Pearl Gray|D3D3D6
+420|Dark Hazelnut Brown|A07042
+422|Light Hazelnut Brown|C69F7B
+433|Medium Brown|7A451F
+434|Light Brown|985E33
+435|Very Light Brown|B87748
+436|Tan|CB9051
+437|Light Tan|E4BB8E
+444|Dark Lemon|FFD600
+445|Light Lemon|FFFB8B
+451|Dark Shell Gray|917B73
+452|Medium Shell Gray|C0B3AE
+453|Light Shell Gray|D7CECB
+469|Avocado Green|72842C
+470|Light Avocado Green|94AB4F
+471|Very Light Avocado Green|AEBF79
+472|Ultra Light Avocado Green|D8E496
+498|Dark Red|A7132B
+500|Very Dark Blue Green|044D33
+501|Dark Blue Green|396F52
+502|Blue Green|5B9071
+503|Medium Blue Green|7BAC94
+504|Very Light Blue Green|C4DECC
+505|Jade Green|338362
+517|Dark Wedgewood|3B768F
+518|Light Wedgewood|4F93A7
+519|Sky Blue|7EB1C8
+520|Dark Fern Green|666D4F
+522|Fern Green|969E7E
+523|Light Fern Green|ABB197
+524|Very Light Fern Green|C4CDAC
+535|Very Light Ash Gray|636458
+543|Ultra Very Light Beige Brown|F2E3CE
+550|Very Dark Violet|5C184E
+552|Medium Violet|803A6B
+553|Violet|A3638B
+554|Light Violet|DBB3CB
+561|Very Dark Jade|2C6A45
+562|Medium Jade|538A6A
+563|Light Jade|8FC098
+564|Very Light Jade|A7CDAF
+580|Dark Moss Green|888D33
+581|Moss Green|A7AE38
+597|Turquoise|5BA3B3
+598|Light Turquoise|90C3CC
+600|Very Dark Cranberry|CD2F63
+601|Dark Cranberry|D1286A
+602|Medium Cranberry|E24874
+603|Cranberry|FF94B4
+604|Light Cranberry|FFB0BE
+605|Very Light Cranberry|FFC0CD
+606|Bright Orange-Red|FA3203
+608|Bright Orange|FD5D35
+610|Dark Drab Brown|796047
+611|Drab Brown|967656
+612|Light Drab Brown|BC9A78
+613|Very Light Drab Brown|DCC4AA
+632|Ultra Very Dark Desert Sand|875539
+640|Very Dark Beige Gray|857B61
+642|Dark Beige Gray|A49878
+644|Medium Beige Gray|DDD8CB
+645|Very Dark Beaver Gray|6E655C
+646|Dark Beaver Gray|877D73
+647|Medium Beaver Gray|B0A697
+648|Light Beaver Gray|BCB4AC
+666|Bright Red|E31D42
+676|Light Old Gold|E5CE97
+677|Very Light Old Gold|F5ECCB
+680|Dark Old Gold|BC8D0E
+699|Green|056517
+700|Bright Green|07731B
+701|Light Green|3F8F29
+702|Kelly Green|47A72F
+703|Chartreuse|7BB54B
+704|Bright Chartreuse|9ECF34
+712|Cream|FFFBEF
+718|Plum|9C2462
+720|Dark Orange Spice|E55C1F
+721|Medium Orange Spice|F27842
+722|Light Orange Spice|F7976F
+725|Medium Light Topaz|FFC840
+726|Light Topaz|FDD755
+727|Very Light Topaz|FFF1AF
+728|Topaz|E4B468
+729|Medium Old Gold|D0A53E
+730|Very Dark Olive Green|827B30
+731|Dark Olive Green|938B37
+732|Olive Green|948C36
+733|Medium Olive Green|BCB34C
+734|Light Olive Green|C7C063
+738|Very Light Tan|ECCC9E
+739|Ultra Very Light Tan|F8E4C8
+740|Tangerine|FF8B00
+741|Medium Tangerine|FFA32B
+742|Light Tangerine|FFBF57
+743|Medium Yellow|FED376
+744|Pale Yellow|FFE793
+745|Light Pale Yellow|FFE9AD
+746|Off White|FCFCEE
+747|Very Light Sky Blue|E5FCFD
+754|Light Peach|F7CBBF
+758|Very Light Terra Cotta|EEAA9B
+760|Salmon|F5ADAD
+761|Light Salmon|FFC9C9
+762|Very Light Pearl Gray|ECECEC
+772|Very Light Yellow Green|E4ECD4
+775|Very Light Baby Blue|D9EBF1
+776|Medium Pink|FCB0B9
+777|Very Dark Raspberry|913546
+778|Very Light Antique Mauve|DFB3BB
+779|Dark Cocoa|624B45
+780|Ultra Very Dark Topaz|94632E
+781|Very Dark Topaz|A26D20
+782|Dark Topaz|AE7720
+783|Medium Topaz|CE9124
+791|Very Dark Cornflower Blue|464563
+792|Dark Cornflower Blue|555B7B
+793|Medium Cornflower Blue|707DA2
+794|Light Cornflower Blue|8F9CC1
+796|Dark Royal Blue|11416E
+797|Royal Blue|13477D
+798|Dark Delft Blue|466A8E
+799|Medium Delft Blue|748EB6
+800|Pale Delft Blue|C0CCDE
+801|Dark Coffee Brown|653919
+803|Ultra Very Dark Baby Blue|2C5977
+806|Dark Peacock Blue|3D95A5
+807|Peacock Blue|64ABBA
+809|Delft Blue|94A8C6
+813|Light Blue|A1C2D7
+814|Dark Garnet|7B001B
+815|Medium Garnet|87071F
+816|Garnet|970B23
+817|Very Dark Coral Red|BB051F
+818|Baby Pink|FFDFD9
+819|Light Baby Pink|FFEEEB
+820|Very Dark Royal Blue|0E365C
+822|Light Beige Gray|E7E2D3
+823|Dark Navy Blue|213063
+824|Very Dark Blue|396987
+825|Dark Blue|4781A5
+826|Medium Blue|6B9EBF
+827|Very Light Blue|BDDDED
+828|Ultra Very Light Blue|C5E8ED
+829|Very Dark Golden Olive|7E6A2C
+830|Dark Golden Olive|8D784B
+831|Medium Golden Olive|AA8F56
+832|Golden Olive|BD9B51
+833|Light Golden Olive|C8AB6C
+834|Very Light Golden Olive|DBBE7F
+838|Very Dark Beige Brown|594937
+839|Dark Beige Brown|675541
+840|Medium Beige Brown|9A7C5C
+841|Light Beige Brown|B69B7E
+842|Very Light Beige Brown|D1BAA1
+844|Ultra Dark Beaver Gray|484848
+869|Very Dark Hazelnut Brown|835E39
+890|Ultra Dark Pistachio Green|174923
+891|Dark Carnation|FF3D52
+892|Medium Carnation|FF5768
+893|Light Carnation|FC7C85
+894|Very Light Carnation|FFB2BB
+895|Very Dark Hunter Green|1B5300
+898|Very Dark Coffee Brown|492A13
+899|Medium Rose|F27688
+900|Dark Burnt Orange|D15807
+902|Very Dark Garnet|822637
+904|Very Dark Parrot Green|557822
+905|Dark Parrot Green|628A28
+906|Medium Parrot Green|7FB335
+907|Light Parrot Green|C7E666
+909|Very Dark Emerald Green|156F49
+910|Dark Emerald Green|187E56
+911|Medium Emerald Green|189065
+912|Light Emerald Green|1BA35F
+913|Medium Nile Green|6DAB77
+915|Dark Plum|820043
+917|Medium Plum|9B1359
+918|Dark Red Copper|82342A
+919|Red Copper|A6452D
+920|Medium Copper|AC5434
+921|Copper|C66239
+922|Light Copper|E27323
+924|Very Dark Gray Green|566A6A
+926|Medium Gray Green|98AEAE
+927|Light Gray Green|BDCBCB
+928|Very Light Gray Green|DDE3E3
+930|Dark Antique Blue|455C71
+931|Medium Antique Blue|6A859E
+932|Light Antique Blue|A2B5C6
+934|Black Avocado Green|313919
+935|Dark Avocado Green|424D21
+936|Very Dark Avocado Green|4C5826
+937|Medium Avocado Green|627133
+938|Ultra Dark Coffee Brown|361F0E
+939|Very Dark Navy Blue|1B2853
+943|Medium Aquamarine|3D9370
+945|Tawny|FBD5BB
+946|Medium Burnt Orange|EB6307
+947|Burnt Orange|FF7B4D
+948|Very Light Peach|FEE7DA
+950|Light Desert Sand|EED3C4
+951|Light Tawny|FFE2CF
+954|Nile Green|88BA91
+955|Light Nile Green|A2D6AD
+956|Geranium|FF6D73
+957|Pale Geranium|FD9AAB
+958|Dark Sea Green|3EB6A1
+959|Medium Sea Green|59C7B4
+961|Dark Dusty Rose|CF7383
+962|Medium Dusty Rose|E68A99
+963|Ultra Very Light Dusty Rose|FFD7D7
+964|Light Sea Green|A9E2D8
+966|Medium Baby Green|B9D7C0
+967|Very Light Apricot|FFDED5
+970|Light Pumpkin|F78B13
+971|Pumpkin|F67F00
+972|Deep Canary|FFB515
+973|Bright Canary|FFE300
+975|Dark Golden Brown|753F10
+976|Medium Golden Brown|C28142
+977|Light Golden Brown|DC9C56
+986|Very Dark Forest Green|405230
+987|Dark Forest Green|587141
+988|Medium Forest Green|738B5B
+989|Forest Green|8DA675
+991|Dark Aquamarine|477B6E
+992|Light Aquamarine|6FAE9F
+993|Very Light Aquamarine|90C0B4
+995|Dark Electric Blue|2696B6
+996|Medium Electric Blue|30C2EC
+3011|Dark Khaki Green|898A58
+3012|Medium Khaki Green|A6A75D
+3013|Light Khaki Green|B9B982
+3021|Very Dark Brown Gray|4F4B41
+3022|Medium Brown Gray|8E9078
+3023|Light Brown Gray|B1AA97
+3024|Very Light Brown Gray|EBEAE7
+3031|Very Dark Mocha Brown|4B3C2A
+3032|Medium Mocha Brown|B39F8B
+3033|Very Light Mocha Brown|E3D8CC
+3041|Medium Antique Violet|956F7C
+3042|Light Antique Violet|B79DA7
+3045|Dark Yellow Beige|BC966A
+3046|Medium Yellow Beige|D8BC9A
+3047|Light Yellow Beige|E7D6C1
+3051|Dark Green Gray|5F6648
+3052|Medium Green Gray|889268
+3053|Green Gray|9CA482
+3064|Desert Sand|C48E70
+3072|Very Light Beaver Gray|E6E8E8
+3078|Very Light Golden Yellow|FDF9CD
+3325|Light Baby Blue|B8D2E6
+3326|Light Rose|FBADB4
+3328|Dark Salmon|E36D6D
+3340|Medium Apricot|FF836F
+3341|Apricot|FCAB98
+3345|Dark Hunter Green|1B5915
+3346|Hunter Green|406A3A
+3347|Medium Yellow Green|71935C
+3348|Light Yellow Green|CCD9B1
+3350|Ultra Dark Dusty Rose|BC4365
+3354|Light Dusty Rose|E4A6AC
+3362|Dark Pine Green|5E6B4C
+3363|Medium Pine Green|728256
+3364|Pine Green|83975F
+3371|Black Brown|1E1108
+3607|Light Plum|C55181
+3608|Very Light Plum|EA9CC4
+3609|Ultra Light Plum|F4AED5
+3685|Very Dark Mauve|881531
+3687|Mauve|C96B70
+3688|Medium Mauve|E7A9AC
+3689|Light Mauve|FBBFC2
+3705|Dark Melon|FF7992
+3706|Medium Melon|FFADBC
+3708|Light Melon|FFCBD5
+3712|Medium Salmon|F18787
+3713|Very Light Salmon|FFE2E2
+3716|Very Light Dusty Rose|FFBDBD
+3721|Dark Shell Pink|A14B51
+3722|Medium Shell Pink|BC6A6E
+3726|Dark Antique Mauve|9B5B66
+3727|Light Antique Mauve|DBA9B2
+3731|Very Dark Dusty Rose|DA6783
+3733|Dusty Rose|E8879B
+3740|Dark Antique Violet|785762
+3743|Very Light Antique Violet|D7CBD3
+3746|Dark Blue Violet|776B98
+3747|Very Light Blue Violet|D3D7ED
+3750|Very Dark Antique Blue|384C5E
+3752|Very Light Antique Blue|C7D1DB
+3753|Ultra Very Light Antique Blue|DBE2E9
+3755|Baby Blue|93B4CE
+3756|Ultra Very Light Baby Blue|EEFCFC
+3760|Medium Wedgewood|3E85A2
+3761|Light Sky Blue|ACD8E2
+3765|Very Dark Peacock Blue|347F8C
+3766|Light Peacock Blue|99CFD9
+3768|Dark Gray Green|657F7F
+3770|Very Light Tawny|FFEEE3
+3771|Ultra Very Light Terra Cotta|F4BBA9
+3772|Very Dark Desert Sand|A06C50
+3773|Medium Desert Sand|B67561
+3774|Very Light Desert Sand|F3E1D7
+3776|Light Mahogany|CF7939
+3777|Very Dark Terra Cotta|863022
+3778|Light Terra Cotta|D98978
+3779|Ultra Very Light Terra Cotta|F8CAC8
+3781|Dark Mocha Brown|6B5743
+3782|Light Mocha Brown|D2BCA6
+3787|Dark Brown Gray|625D50
+3790|Ultra Dark Beige Gray|7F6A55
+3799|Very Dark Pewter Gray|424242
+3801|Very Dark Melon|E74961
+3802|Very Dark Antique Mauve|714149
+3803|Dark Mauve|AB3357
+3804|Dark Cyclamen Pink|E02876
+3805|Cyclamen Pink|F3478B
+3806|Light Cyclamen Pink|FF8CAE
+3807|Cornflower Blue|60678C
+3808|Ultra Very Dark Turquoise|366970
+3809|Very Dark Turquoise|3F7C85
+3810|Dark Turquoise|488E9A
+3811|Very Light Turquoise|BCE3E6
+3812|Very Dark Sea Green|2F8C84
+3813|Light Blue Green|B2D4BD
+3814|Aquamarine|508B7D
+3815|Dark Celadon Green|477759
+3816|Celadon Green|65A57D
+3817|Light Celadon Green|99C3AA
+3818|Ultra Very Dark Emerald Green|115A3B
+3819|Light Moss Green|E0E868
+3820|Dark Straw|DFB65F
+3821|Straw|F3CE75
+3822|Light Straw|F6DC98
+3823|Ultra Pale Yellow|FFFDE3
+3824|Light Apricot|FECDC2
+3825|Pale Pumpkin|FDBD96
+3826|Golden Brown|AD7239
+3827|Pale Golden Brown|F7BB77
+3828|Hazelnut Brown|B78B61
+3829|Very Dark Old Gold|A98204
+3830|Terra Cotta|B95544
+3831|Dark Raspberry|B32F48
+3832|Medium Raspberry|DB556E
+3833|Light Raspberry|EA8699
+3834|Dark Grape|72375D
+3835|Medium Grape|946083
+3836|Light Grape|BA91AA
+3837|Ultra Dark Lavender|6C3A6E
+3838|Dark Lavender Blue|5C7294
+3839|Medium Lavender Blue|7B8EAB
+3840|Light Lavender Blue|B0C0DA
+3841|Pale Baby Blue|CDDFED
+3842|Dark Wedgewood|32667C
+3843|Electric Blue|14AAD0
+3844|Dark Bright Turquoise|12AEBA
+3845|Medium Bright Turquoise|04C4CA
+3846|Light Bright Turquoise|06E3E6
+3847|Dark Teal Green|347D75
+3848|Medium Teal Green|559392
+3849|Light Teal Green|52B3A4
+3850|Dark Bright Green|378477
+3851|Light Bright Green|49B3A1
+3852|Very Dark Straw|CD9D37
+3853|Dark Autumn Gold|F29746
+3854|Medium Autumn Gold|F2AF68
+3855|Light Autumn Gold|FAD396
+3856|Ultra Very Light Mahogany|FFD3B5
+3857|Dark Rosewood|68251A
+3858|Medium Rosewood|964A3F
+3859|Light Rosewood|BA8B7C
+3860|Cocoa|7D5D57
+3861|Light Cocoa|A68881
+3862|Dark Mocha Beige|8A6E4E
+3863|Medium Mocha Beige|A4835C
+3864|Light Mocha Beige|CBB08A
+3865|Winter White|F9F7F1
+3866|Ultra Very Light Mocha Brown|FAF6F0`;
+
+</script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CH='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const SYMS=Array.from('●■▲◆★✚✖○□△◇☆♥♠♣♦✿❖▼◀▶◐◑⊕⊗⊞⊠#@%&$+=?ABCDEFGHJKLMNPRSTUVWXYZ23456789');
+
+/* ---------- colour ---------- */
+function lin(c){c/=255;return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4)}
+function rgb2lab(r,g,b){const R=lin(r),G=lin(g),B=lin(b);
+ let x=(R*0.4124+G*0.3576+B*0.1805)/0.95047,y=R*0.2126+G*0.7152+B*0.0722,z=(R*0.0193+G*0.1192+B*0.9505)/1.08883;
+ const f=t=>t>0.008856?Math.cbrt(t):7.787*t+16/116;x=f(x);y=f(y);z=f(z);return[116*y-16,500*(x-y),200*(y-z)]}
+const DMC=DMC_RAW.trim().split('\n').map(l=>{const[id,name,hex]=l.split('|');const r=parseInt(hex.slice(0,2),16),g=parseInt(hex.slice(2,4),16),b=parseInt(hex.slice(4,6),16);
+ return{id,name,hex:'#'+hex,rgb:[r,g,b],lab:rgb2lab(r,g,b),light:(0.299*r+0.587*g+0.114*b)>150}});
+const SPECIAL={B5200:-3,White:-2,Ecru:-1};
+const sortKey=id=>id in SPECIAL?SPECIAL[id]:parseInt(id,10);
+DMC.sort((a,b)=>sortKey(a.id)-sortKey(b.id));
+const BY=Object.fromEntries(DMC.map(d=>[d.id,d]));
+function normId(t){t=String(t).trim().replace(/^dmc\s*#?/i,'');const l=t.toLowerCase();
+ if(l==='white'||l==='blanc')return'White';if(l==='ecru')return'Ecru';if(l==='b5200'||l==='5200')return'B5200';return t}
+
+/* ---------- state & storage ---------- */
+const S={inv:{},patterns:{},tab:'floss',mode:'local',readOnly:false,fShow:'all',fq:'',dl:null};
+const pend={},inflight={},tmr={};
+let local=null;
+const KEY='stitchstash-data',SKEY='stitchstash-sync';
+function blankData(){return{v:1,floss:{},patterns:{},deleted:{}}}
+function loadLocal(){try{local=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){local=null}
+ if(!local||typeof local!=='object')local=blankData();for(const k of['floss','patterns','deleted'])if(!local[k]||typeof local[k]!=='object')local[k]={}}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(local))}catch(e){toast('Your device is out of storage space for this app — delete an old pattern or export a backup.')}}
+let syncCfg=null;
+function loadCfg(){try{syncCfg=JSON.parse(localStorage.getItem(SKEY)||'null')}catch(e){syncCfg=null}}
+function saveCfg(){try{if(syncCfg)localStorage.setItem(SKEY,JSON.stringify(syncCfg));else localStorage.removeItem(SKEY)}catch(e){}}
+
+function setSync(state,text){$('#syncDot').className='dot '+state;$('#syncText').textContent=text}
+function banner(html){const b=$('#banner');b.innerHTML=html||'';b.classList.toggle('on',!!html)}
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2800)}
+function errMsg(e){return(e&&e.message)||'Something went wrong.'}
+
+function commit(){saveLocal();scheduleSync()}
+const backend={
+ async setFloss(id,q){local.floss[id]={qty:q,at:Date.now()};commit()},
+ async putPattern(p){const b=serialize(p);b.at=Date.now();local.patterns[p.id]=b;delete local.deleted[p.id];commit()},
+ async patchPattern(id,patch){if(local.patterns[id]){Object.assign(local.patterns[id],patch,{at:Date.now()});commit()}},
+ async delPattern(id){delete local.patterns[id];local.deleted[id]=Date.now();commit()}
+};
+
+function setQty(id,q){
+ q=Math.max(0,Math.min(999,Math.round(q)));
+ if(q)S.inv[id]=q;else delete S.inv[id];pend[id]=q;
+ clearTimeout(tmr[id]);tmr[id]=setTimeout(()=>flush(id),350);renderAllInv()}
+async function flush(id){
+ if(inflight[id]){tmr[id]=setTimeout(()=>flush(id),300);return}
+ if(!(id in pend))return;const q=pend[id];inflight[id]=true;
+ try{await backend.setFloss(id,q)}catch(e){toast(errMsg(e))}
+ inflight[id]=false;if(pend[id]===q)delete pend[id]}
+
+function serialize(p){let s='';for(let i=0;i<p.cells.length;i++)s+=p.cells[i]===255?'.':CH[p.cells[i]];
+ return{name:p.name,w:p.w,h:p.h,count:p.count,palette:p.palette,cells:s,created:p.created||Date.now(),onList:!!p.onList}}
+function decode(id,v,prev){
+ if(!v||typeof v.cells!=='string'||!Array.isArray(v.palette))return null;
+ let cells;if(prev&&prev._raw===v.cells)cells=prev.cells;else{cells=new Uint8Array(v.cells.length);for(let i=0;i<v.cells.length;i++){const c=v.cells[i];cells[i]=c==='.'?255:CH.indexOf(c)}}
+ const palette=v.palette.map(String).filter(x=>BY[x]);if(palette.length!==v.palette.length)return null;
+ return{id,name:String(v.name||'Untitled'),w:v.w|0,h:v.h|0,count:+v.count||14,palette,cells,_raw:v.cells,created:v.created||0,onList:!!v.onList}}
+
+function applyFloss(){const inv={};for(const[k,v]of Object.entries(local.floss)){const q=+(v&&v.qty)||0;if(q>0&&BY[k])inv[k]=q}
+ for(const[k,q]of Object.entries(pend)){if(q>0)inv[k]=q;else delete inv[k]}S.inv=inv;renderAllInv()}
+function applyPatterns(){const next={};for(const[id,v]of Object.entries(local.patterns)){const p=decode(id,v,S.patterns[id]);if(p)next[id]=p}
+ S.patterns=next;renderPatterns();renderShop();if(PV.view){const p=S.patterns[PV.view.pat.id];if(p){PV.view.update(p)}else closePattern(true)}}
+function applyAll(){applyFloss();applyPatterns()}
+
+/* ---------- files (download / share) ---------- */
+S.dl={async save({filename,data}){
+ const blob=data instanceof Blob?data:new Blob([data],{type:filename.endsWith('.csv')?'text/csv':filename.endsWith('.json')?'application/json':'text/plain'});
+ const file=new File([blob],filename,{type:blob.type});
+ if(navigator.canShare&&/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)&&navigator.canShare({files:[file]})){
+  try{await navigator.share({files:[file],title:filename});return{status:'saved'}}catch(e){if(e&&e.name==='AbortError')throw{code:'declined'}}}
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);return{status:'saved'}}};
+
+/* ---------- GitHub sync ---------- */
+let syncing=false,syncAgain=false,syncT=null;
+function b64enc(str){const bytes=new TextEncoder().encode(str);let bin='';for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));return btoa(bin)}
+function b64dec(b64){const bin=atob(b64.replace(/\s/g,''));const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return new TextDecoder().decode(bytes)}
+async function gh(method,path,body,accept){
+ let r;try{r=await fetch('https://api.github.com'+path,{method,cache:'no-store',headers:{Authorization:'Bearer '+syncCfg.token,Accept:accept||'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined})}
+ catch(e){throw new Error(navigator.onLine?'Couldn’t reach GitHub.':'You’re offline — changes are saved on this device and will sync later.')}
+ return r}
+async function ghFail(r){
+ if(r.status===401)return new Error('GitHub rejected the token — it may have expired. Paste a new one in Settings.');
+ if(r.status===403)return new Error('The token can’t write to that repository. Give it “Contents: Read and write” access.');
+ if(r.status===404)return new Error('Repository not found — check the name, and that the token can access it.');
+ let m='';try{m=(await r.json()).message}catch(e){}return new Error('GitHub error '+r.status+(m?': '+m:''))}
+const filePath=()=>`/repos/${syncCfg.repo}/contents/${encodeURIComponent(syncCfg.path||'stitchstash-data.json')}`;
+async function pull(){
+ const r=await gh('GET',filePath());if(r.status===404){const rr=await gh('GET','/repos/'+syncCfg.repo);if(!rr.ok)throw await ghFail(rr);return{data:null,sha:null}}
+ if(!r.ok)throw await ghFail(r);const j=await r.json();let text;
+ if(j.content&&j.encoding==='base64')text=b64dec(j.content);else{const r2=await gh('GET',filePath(),null,'application/vnd.github.raw+json');if(!r2.ok)throw await ghFail(r2);text=await r2.text()}
+ let data;try{data=JSON.parse(text)}catch(e){throw new Error('The data file on GitHub isn’t valid — fix or delete it there.')}
+ return{data,sha:j.sha}}
+async function push(data,sha){
+ const r=await gh('PUT',filePath(),{message:'Update Stitch Stash data',content:b64enc(JSON.stringify(data)),...(sha?{sha}:{})});
+ if(r.status===409||r.status===422)return false;if(!r.ok)throw await ghFail(r);return true}
+function mergeData(a,b){const out=blankData();if(!b||typeof b!=='object')b=blankData();
+ for(const k of['floss','patterns']){const A=a[k]||{},B=b[k]||{};for(const id of new Set([...Object.keys(A),...Object.keys(B)])){const x=A[id],y=B[id];out[k][id]=!x?y:!y?x:((y.at||0)>(x.at||0)?y:x)}}
+ const DA=a.deleted||{},DB=b.deleted||{};for(const id of new Set([...Object.keys(DA),...Object.keys(DB)]))out.deleted[id]=Math.max(DA[id]||0,DB[id]||0);
+ for(const[id,t]of Object.entries(out.deleted)){const p=out.patterns[id];if(p&&(p.at||0)<=t)delete out.patterns[id]}
+ return out}
+function canon(o){if(Array.isArray(o))return'['+o.map(canon).join(',')+']';if(o&&typeof o==='object')return'{'+Object.keys(o).sort().map(k=>JSON.stringify(k)+':'+canon(o[k])).join(',')+'}';return JSON.stringify(o)}
+function ago(t){const s=Math.round((Date.now()-t)/1000);return s<45?'just now':s<3600?Math.round(s/60)+' min ago':s<86400?Math.round(s/3600)+' h ago':new Date(t).toLocaleDateString()}
+function showSyncStatus(){
+ if(!syncCfg){setSync('','On this device');return}
+ if(syncing){setSync('warn','Syncing…');return}
+ if(syncCfg.error){setSync('bad','Sync problem');return}
+ setSync('ok',syncCfg.lastSync?'Synced '+ago(syncCfg.lastSync):'Sync on')}
+function scheduleSync(delay=2500){if(!syncCfg)return;clearTimeout(syncT);syncT=setTimeout(syncNow,delay)}
+async function syncNow(){
+ if(!syncCfg)return;if(syncing){syncAgain=true;return}
+ syncing=true;showSyncStatus();
+ try{
+  for(let attempt=0;;attempt++){
+   const{data,sha}=await pull();
+   for(const id of Object.keys(pend))flushNowSync(id);
+   const merged=mergeData(local,data);
+   const localChanged=canon(merged)!==canon(local),remoteChanged=!data||canon(merged)!==canon(mergeData(data,blankData()));
+   local=merged;saveLocal();if(localChanged)applyAll();
+   if(!remoteChanged||await push(merged,sha))break;
+   if(attempt>=3)throw new Error('GitHub kept reporting a conflict — try again in a moment.')}
+  syncCfg.lastSync=Date.now();syncCfg.error='';saveCfg()}
+ catch(e){if(syncCfg){syncCfg.error=e.message;saveCfg()}}
+ syncing=false;showSyncStatus();renderSettings();
+ if(syncAgain){syncAgain=false;scheduleSync(500)}}
+function flushNowSync(id){if(inflight[id])return;const q=pend[id];local.floss[id]={qty:q,at:Date.now()};delete pend[id];clearTimeout(tmr[id])}
+
+/* ---------- settings ---------- */
+function renderSettings(){
+ const on=!!syncCfg;$('#syncOff').hidden=on;$('#syncOn').hidden=!on;
+ if(on){$('#syncRepo').textContent=syncCfg.repo;$('#syncWhen').textContent=syncCfg.lastSync?'Last synced '+ago(syncCfg.lastSync)+'.':'Not synced yet.';
+  const er=$('#syncErr');er.hidden=!syncCfg.error;er.textContent=syncCfg.error||''}
+ const np=Object.keys(local.patterns).length,nf=Object.values(local.floss).filter(v=>v&&v.qty>0).length;
+ $('#dataSummary').textContent=`${nf} floss colour${nf===1?'':'s'} and ${np} pattern${np===1?'':'s'} stored on this device.`}
+$('#syncForm').addEventListener('submit',async e=>{e.preventDefault();
+ let repo=$('#ghRepo').value.trim().replace(/^https?:\/\/github\.com\//i,'').replace(/\.git$/,'').replace(/\/+$/,'');const token=$('#ghToken').value.trim();
+ const msg=$('#syncMsg');if(!/^[\w.-]+\/[\w.-]+$/.test(repo)){msg.textContent='Enter the repository as your-username/repository-name.';return}
+ if(!token){msg.textContent='Paste your access token.';return}
+ msg.innerHTML='<span class="spinner"></span> Checking…';syncCfg={repo,token,path:'stitchstash-data.json',lastSync:0,error:''};
+ try{const r=await gh('GET','/repos/'+repo);if(!r.ok)throw await ghFail(r);const j=await r.json();
+  if(!j.private&&!confirmPublic){confirmPublic=true;syncCfg=null;msg.innerHTML='<b>That repository is public</b>, so anyone could see your data. Make it private on GitHub (recommended), or press Connect again to use it anyway.';return}
+  confirmPublic=false;saveCfg();$('#ghToken').value='';msg.textContent='';await syncNow();
+  if(syncCfg&&syncCfg.error){toast(syncCfg.error)}else toast('Connected — your data is syncing with GitHub')}
+ catch(err){syncCfg=null;msg.textContent=err.message}
+ renderSettings();showSyncStatus()});
+let confirmPublic=false;
+$('#syncNowBtn').addEventListener('click',()=>syncNow());
+let discArm=false;
+$('#syncDisc').addEventListener('click',e=>{if(!discArm){discArm=true;e.target.textContent='Tap again to disconnect';setTimeout(()=>{discArm=false;e.target.textContent='Disconnect'},4000);return}
+ syncCfg=null;saveCfg();discArm=false;e.target.textContent='Disconnect';renderSettings();showSyncStatus();toast('Sync turned off. Your data stays on this device and on GitHub.')});
+$('#exportBtn').addEventListener('click',async()=>{for(const id of Object.keys(pend))flushNowSync(id);
+ const d=new Date().toISOString().slice(0,10);try{await S.dl.save({filename:`stitch-stash-backup-${d}.json`,data:JSON.stringify(local)})}catch(e){}});
+$('#importBtn').addEventListener('click',()=>$('#importFile').click());
+$('#importFile').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+ try{const d=JSON.parse(await f.text());if(!d||typeof d!=='object'||!d.floss||!d.patterns)throw 0;
+  local=mergeData(local,d);commit();applyAll();renderSettings();toast('Backup imported and merged with what was already here')}
+ catch(err){toast('That file isn’t a Stitch Stash backup')}});
+
+async function init(){
+ loadLocal();loadCfg();renderAll();applyAll();renderSettings();showSyncStatus();
+ try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+ if(syncCfg)syncNow();
+ setInterval(()=>{if(syncCfg&&document.visibilityState==='visible')syncNow();else showSyncStatus()},60000);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&syncCfg)syncNow()});
+ window.addEventListener('online',()=>{if(syncCfg)syncNow()});
+ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+/* ---------- tabs ---------- */
+const TABS=['floss','new','patterns','shopping','settings'];
+function route(){const h=location.hash.replace('#','');S.tab=TABS.includes(h)?h:'floss';
+ document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.tab===S.tab));
+ TABS.forEach(t=>$('#tab-'+t).classList.toggle('on',t===S.tab));if(S.tab==='settings')renderSettings();window.scrollTo(0,0)}
+window.addEventListener('hashchange',route);
+
+/* ---------- floss tab ---------- */
+function renderFloss(){
+ const owned=Object.keys(S.inv);$('#stColors').textContent=owned.length;$('#stSkeins').textContent=owned.reduce((a,k)=>a+S.inv[k],0);
+ const q=S.fq.trim().toLowerCase();
+ let list=DMC;if(S.fShow==='owned')list=list.filter(d=>S.inv[d.id]);
+ if(q){const n=normId(q).toLowerCase();list=list.filter(d=>d.id.toLowerCase().startsWith(n)||d.name.toLowerCase().includes(q))}
+ const g=$('#fGrid');
+ if(!list.length){g.innerHTML=S.fShow==='owned'&&!q?`<div class="panel empty" style="grid-column:1/-1"><h3>No floss yet</h3>Switch to “All DMC colours” and tap + on the ones you have, or use “Add several at once”.</div>`:`<div class="panel empty" style="grid-column:1/-1"><h3>No matches</h3>Try another number or colour name.</div>`;return}
+ g.innerHTML=list.map(d=>{const n=S.inv[d.id]||0;return`<div class="fcard${n?' owned':''}" data-id="${d.id}"><div class="sw" style="background:${d.hex}"></div><div class="finfo"><b>${d.id}</b><div title="${esc(d.name)}">${esc(d.name)}</div></div><div class="step${n?'':' zero'}"><button data-d="-1" aria-label="One fewer">−</button><span>${n}</span><button data-d="1" aria-label="One more">+</button></div></div>`}).join('')}
+$('#fGrid').addEventListener('click',e=>{const b=e.target.closest('button[data-d]');if(!b)return;const id=b.closest('.fcard').dataset.id;setQty(id,(S.inv[id]||0)+(+b.dataset.d))});
+$('#fSearch').addEventListener('input',e=>{S.fq=e.target.value;renderFloss()});
+$('#fShow').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;S.fShow=b.dataset.v;[...$('#fShow').children].forEach(x=>x.classList.toggle('on',x===b));renderFloss()});
+$('#bulkAdd').addEventListener('click',()=>{const toks=$('#bulkText').value.split(/[\s,;]+/).filter(Boolean);const bad=[],ok=[];
+ toks.forEach(t=>{const id=normId(t);if(BY[id]){ok.push(id)}else bad.push(t)});
+ ok.forEach(id=>setQty(id,(S.inv[id]||0)+1));
+ $('#bulkMsg').textContent=(ok.length?`Added ${ok.length}.`:'')+(bad.length?` Didn’t recognise: ${bad.join(', ')}`:'');
+ if(!bad.length)$('#bulkText').value=''});
+
+/* ---------- pattern generation ---------- */
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function sampleImage(img,w){
+ const iw=img.naturalWidth,ih=img.naturalHeight,h=Math.max(1,Math.round(w*ih/iw));
+ let src=img,sw=iw,sh=ih;
+ while(sw/2>=w*2&&sh/2>=h*2){const c=document.createElement('canvas');sw=Math.round(sw/2);sh=Math.round(sh/2);c.width=sw;c.height=sh;const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(src,0,0,sw,sh);src=c}
+ const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';x.drawImage(src,0,0,w,h);
+ return{w,h,data:x.getImageData(0,0,w,h).data}}
+function nearestIdx(L,a,b,pal){let bi=0,bd=Infinity;for(let k=0;k<pal.length;k++){const p=pal[k].lab,d=(L-p[0])**2+(a-p[1])**2+(b-p[2])**2;if(d<bd){bd=d;bi=k}}return bi}
+function kmeans(lab,idx,k){
+ let sample=idx;const MAX=20000;if(idx.length>MAX){sample=[];const st=idx.length/MAX;for(let j=0;j<MAX;j++)sample.push(idx[Math.floor(j*st)])}
+ const m=sample.length;k=Math.min(k,m);const rnd=mulberry(12345);
+ const C=[];const D=new Float64Array(m).fill(Infinity);
+ const pick=i=>{const p=sample[i]*3;C.push([lab[p],lab[p+1],lab[p+2]])};
+ pick(Math.floor(m/2));
+ while(C.length<k){const c=C[C.length-1];let sum=0;
+  for(let j=0;j<m;j++){const p=sample[j]*3,d=(lab[p]-c[0])**2+(lab[p+1]-c[1])**2+(lab[p+2]-c[2])**2;if(d<D[j])D[j]=d;sum+=D[j]}
+  if(sum===0)break;let r=rnd()*sum,j=0;for(;j<m-1;j++){r-=D[j];if(r<=0)break}pick(j)}
+ const as=new Int32Array(m);
+ for(let it=0;it<12;it++){const acc=C.map(()=>[0,0,0,0]);
+  for(let j=0;j<m;j++){const p=sample[j]*3;let bi=0,bd=Infinity;for(let q=0;q<C.length;q++){const c=C[q],d=(lab[p]-c[0])**2+(lab[p+1]-c[1])**2+(lab[p+2]-c[2])**2;if(d<bd){bd=d;bi=q}}as[j]=bi;const A=acc[bi];A[0]+=lab[p];A[1]+=lab[p+1];A[2]+=lab[p+2];A[3]++}
+  C.forEach((c,q)=>{const A=acc[q];if(A[3]){c[0]=A[0]/A[3];c[1]=A[1]/A[3];c[2]=A[2]/A[3]}})}
+ return C}
+function assign(lab,mask,w,h,pal,dither){
+ const out=new Int16Array(w*h).fill(-1);const buf=dither?Float32Array.from(lab):lab;const cache=new Map();
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x;if(!mask[i])continue;const p=i*3,L=buf[p],a=buf[p+1],b=buf[p+2];let k;
+  if(dither){k=nearestIdx(L,a,b,pal);const q=pal[k].lab,e=[(L-q[0])*.8,(a-q[1])*.8,(b-q[2])*.8];
+   const spread=(xx,yy,f)=>{if(xx<0||xx>=w||yy>=h)return;const j=yy*w+xx;if(!mask[j])return;const o=j*3;buf[o]+=e[0]*f;buf[o+1]+=e[1]*f;buf[o+2]+=e[2]*f};
+   spread(x+1,y,7/16);spread(x-1,y+1,3/16);spread(x,y+1,5/16);spread(x+1,y+1,1/16)}
+  else{const key=((L*4)|0)+','+((a*4)|0)+','+((b*4)|0);k=cache.get(key);if(k===undefined){k=nearestIdx(L,a,b,pal);cache.set(key,k)}}
+  out[i]=k}
+ return out}
+function despeckle(out,w,h){const src=Int16Array.from(out);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){const i=y*w+x,c=src[i];if(c<0)continue;const nb=[];
+  if(x>0)nb.push(src[i-1]);if(x<w-1)nb.push(src[i+1]);if(y>0)nb.push(src[i-w]);if(y<h-1)nb.push(src[i+w]);
+  if(nb.includes(c))continue;const cnt={};let best=-1,bc=0;nb.forEach(n=>{if(n<0)return;cnt[n]=(cnt[n]||0)+1;if(cnt[n]>bc){bc=cnt[n];best=n}});
+  if(bc>=3)out[i]=best}}
+function removeBackground(lab,mask,w,h,tol){
+ const border=[];for(let x=0;x<w;x++){border.push(x,(h-1)*w+x)}for(let y=1;y<h-1;y++){border.push(y*w,y*w+w-1)}
+ const B=border.filter(i=>mask[i]);if(!B.length)return;
+ const T2=tol*tol,d2=(i,j)=>(lab[i*3]-lab[j*3])**2+(lab[i*3+1]-lab[j*3+1])**2+(lab[i*3+2]-lab[j*3+2])**2;
+ const step=Math.max(1,Math.floor(B.length/150));let best=B[0],bc=-1;
+ for(let s=0;s<B.length;s+=step){const c=B[s];let k=0;for(const j of B)if(d2(c,j)<T2)k++;if(k>bc){bc=k;best=c}}
+ if(bc<B.length*0.25)return; // no dominant border colour, nothing that looks like a background
+ const ref=[0,0,0];let m=0;for(const j of B)if(d2(best,j)<T2){ref[0]+=lab[j*3];ref[1]+=lab[j*3+1];ref[2]+=lab[j*3+2];m++}ref[0]/=m;ref[1]/=m;ref[2]/=m;
+ const dr=i=>(lab[i*3]-ref[0])**2+(lab[i*3+1]-ref[1])**2+(lab[i*3+2]-ref[2])**2;
+ const seen=new Uint8Array(w*h),st=[];for(const j of B)if(dr(j)<T2){seen[j]=1;st.push(j)}
+ while(st.length){const i=st.pop();mask[i]=0;const x=i%w,y=(i-x)/w;
+  const nb=[x>0?i-1:-1,x<w-1?i+1:-1,y>0?i-w:-1,y<h-1?i+w:-1];
+  for(const j of nb)if(j>=0&&!seen[j]&&mask[j]&&dr(j)<T2){seen[j]=1;st.push(j)}}}
+function generate(img,o){
+ const{w,h,data}=sampleImage(img,o.width);const n=w*h,lab=new Float32Array(n*3),mask=new Uint8Array(n);
+ for(let i=0;i<n;i++){const a=data[i*4+3];if(o.trans&&a<128)continue;let r=data[i*4],g=data[i*4+1],b=data[i*4+2];
+  if(a<255){const f=a/255;r=r*f+255*(1-f);g=g*f+255*(1-f);b=b*f+255*(1-f)}
+  const L=rgb2lab(r,g,b);lab[i*3]=L[0];lab[i*3+1]=L[1];lab[i*3+2]=L[2];mask[i]=1}
+ if(o.bg)removeBackground(lab,mask,w,h,o.tol);
+ const idx=[];for(let i=0;i<n;i++)if(mask[i])idx.push(i);
+ if(!idx.length)throw new Error(o.bg?'Background removal took out the whole picture — turn the background strength down.':'This image is completely transparent.');
+ const skip=o.skip||new Set();
+ let cand=o.owned?DMC.filter(d=>S.inv[d.id]):DMC;
+ if(!cand.length)throw new Error('You don’t have any floss in your stash yet — add some on the “My floss” tab or untick “Only use floss I already own”.');
+ if(o.skipMode==='nearest'){cand=cand.filter(d=>!skip.has(d.id));if(!cand.length)throw new Error('Every available colour is skipped — restore one to continue.')}
+ const cents=kmeans(lab,idx,Math.min(o.colors,cand.length));
+ let pal=[...new Set(cents.map(c=>cand[nearestIdx(c[0],c[1],c[2],cand)]))];
+ let out=assign(lab,mask,w,h,pal,o.dither);
+ if(o.tidy&&pal.length>2){const cnt=new Array(pal.length).fill(0);for(const k of out)if(k>=0)cnt[k]++;
+  const th=Math.max(4,Math.floor(idx.length*0.0015));const keep=pal.filter((_,k)=>cnt[k]>=th);
+  if(keep.length>=2&&keep.length<pal.length){pal=keep;out=assign(lab,mask,w,h,pal,o.dither)}}
+ if(o.tidy&&!o.dither)despeckle(out,w,h);
+ const swap=o.swap||new Map();const res=id=>{let g=0;while(swap.has(id)&&g++<30)id=swap.get(id);return id};
+ const ids=[],pos={},cid=new Int16Array(n).fill(-1);
+ for(let i=0;i<n;i++){if(out[i]<0)continue;const id=res(pal[out[i]].id);if(o.skipMode!=='nearest'&&skip.has(id))continue;
+  let k=pos[id];if(k===undefined){k=pos[id]=ids.length;ids.push(id)}cid[i]=k}
+ if(!ids.length)throw new Error('Every colour is skipped — bring one back to continue.');
+ const cnt=new Array(ids.length).fill(0);for(const k of cid)if(k>=0)cnt[k]++;
+ const order=ids.map((_,k)=>k).sort((a,b)=>cnt[b]-cnt[a]);const remap=new Int16Array(ids.length);order.forEach((k,j)=>remap[k]=j);
+ const cells=new Uint8Array(n);for(let i=0;i<n;i++)cells[i]=cid[i]<0?255:remap[cid[i]];
+ return{w,h,count:o.count,palette:order.map(k=>ids[k]),cells}}
+
+/* ---------- requirements ---------- */
+function stitchCounts(p){const c=new Array(p.palette.length).fill(0);for(const k of p.cells)if(k!==255)c[k]++;return c}
+function skeinsFor(st,count){const per=1800*(count/14);return Math.max(1,Math.ceil(st*1.2/per))}
+function reqs(p){const c=stitchCounts(p);return p.palette.map((id,k)=>({k,id,d:BY[id],st:c[k],sk:skeinsFor(c[k],p.count)})).filter(r=>r.st>0)}
+function status(have,need){return have>=need?['ok','✓ Have']:have>0?['part',`Need ${need-have} more`]:['need',`Need ${need}`]}
+function sizeText(w,h,count){const iw=w/count,ih=h/count;return`${iw.toFixed(1)} × ${ih.toFixed(1)} in (${(iw*2.54).toFixed(1)} × ${(ih*2.54).toFixed(1)} cm)`}
+
+/* ---------- chart drawing ---------- */
+function drawChart(cv,p,st){
+ const c=st.cell,W=p.w*c,H=p.h*c;cv.width=W;cv.height=H;cv.style.width=W+'px';cv.style.height=H+'px';
+ const x=cv.getContext('2d');paintChart(x,p,c,st.mode,st.hl,0,0)}
+function paintChart(x,p,c,mode,hl,ox,oy){
+ const W=p.w*c,H=p.h*c;x.fillStyle='#fbf9f4';x.fillRect(ox,oy,W,H);
+ const pal=p.palette.map(id=>BY[id]);const showSym=mode!=='colors'&&c>=9;
+ x.textAlign='center';x.textBaseline='middle';x.font=`${Math.round(c*.72)}px "Segoe UI Symbol","Apple Symbols",system-ui,sans-serif`;
+ for(let y=0;y<p.h;y++)for(let xx=0;xx<p.w;xx++){const k=p.cells[y*p.w+xx];if(k===255)continue;const d=pal[k],dim=hl!=null&&k!==hl;
+  const px=ox+xx*c,py=oy+y*c;
+  if(mode!=='symbols'){x.globalAlpha=dim?.12:1;x.fillStyle=d.hex;x.fillRect(px,py,c,c)}
+  if(showSym){x.globalAlpha=dim?.18:1;x.fillStyle=mode==='symbols'?'#222':(d.light?'#111':'#fff');x.fillText(SYMS[k%SYMS.length],px+c/2,py+c/2+.5)}}
+ x.globalAlpha=1;
+ if(c>=4){x.lineWidth=1;x.strokeStyle='rgba(0,0,0,.14)';x.beginPath();
+  for(let i=0;i<=p.w;i++){if(i%10){const X=ox+i*c+.5;x.moveTo(X,oy);x.lineTo(X,oy+H)}}
+  for(let j=0;j<=p.h;j++){if(j%10){const Y=oy+j*c+.5;x.moveTo(ox,Y);x.lineTo(ox+W,Y)}}x.stroke();
+  x.strokeStyle='rgba(0,0,0,.6)';x.beginPath();
+  for(let i=0;i<=p.w;i+=10){const X=ox+i*c+.5;x.moveTo(X,oy);x.lineTo(X,oy+H)}if(p.w%10){const X=ox+p.w*c-.5;x.moveTo(X,oy);x.lineTo(X,oy+H)}
+  for(let j=0;j<=p.h;j+=10){const Y=oy+j*c+.5;x.moveTo(ox,Y);x.lineTo(ox+W,Y)}if(p.h%10){const Y=oy+p.h*c-.5;x.moveTo(ox,Y);x.lineTo(ox+W,Y)}x.stroke()}}
+function thumb(p,max){const cv=document.createElement('canvas');cv.width=p.w;cv.height=p.h;const x=cv.getContext('2d');const im=x.createImageData(p.w,p.h);const pal=p.palette.map(id=>BY[id].rgb);
+ for(let i=0;i<p.cells.length;i++){const k=p.cells[i],o=i*4;if(k===255){im.data[o]=251;im.data[o+1]=249;im.data[o+2]=244}else{const c=pal[k];im.data[o]=c[0];im.data[o+1]=c[1];im.data[o+2]=c[2]}im.data[o+3]=255}
+ x.putImageData(im,0,0);const s=Math.max(1,Math.floor(max/Math.max(p.w,p.h)));cv.style.width=p.w*s+'px';cv.style.height=p.h*s+'px';return cv}
+async function exportPNG(p){
+ if(!S.dl){toast('Downloads aren’t available here');return}
+ const c=24,m=40,rows=reqs(p).sort((a,b)=>b.st-a.st),legH=60+rows.length*30;const W=Math.max(p.w*c+m*2,620),H=m*2+50+p.h*c+legH;
+ const cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,W,H);
+ x.fillStyle='#2b2420';x.font='bold 24px Georgia,serif';x.textBaseline='alphabetic';x.textAlign='left';x.fillText(p.name,m,m+4);
+ x.font='14px system-ui,sans-serif';x.fillStyle='#7a6e64';x.fillText(`${p.w} × ${p.h} stitches · ${p.count}-count · ${sizeText(p.w,p.h,p.count)}`,m,m+26);
+ const oy=m+50;paintChart(x,p,c,'both',null,m,oy);
+ x.fillStyle='#7a6e64';x.font='12px system-ui,sans-serif';x.textAlign='center';x.textBaseline='bottom';
+ for(let i=10;i<=p.w;i+=10)x.fillText(i,m+i*c,oy-3);x.textAlign='right';x.textBaseline='middle';for(let j=10;j<=p.h;j+=10)x.fillText(j,m-5,oy+j*c);
+ let y=oy+p.h*c+40;x.textAlign='left';x.fillStyle='#2b2420';x.font='bold 18px Georgia,serif';x.fillText('Floss key',m,y);y+=24;x.font='14px system-ui,sans-serif';
+ rows.forEach(r=>{x.fillStyle=r.d.hex;x.fillRect(m,y-10,22,20);x.strokeStyle='#999';x.strokeRect(m+.5,y-9.5,21,19);
+  x.fillStyle=r.d.light?'#111':'#fff';x.textAlign='center';x.fillText(SYMS[r.k%SYMS.length],m+11,y+1);
+  x.textAlign='left';x.fillStyle='#2b2420';x.fillText(`DMC ${r.id}  ${r.d.name}  —  ${r.st.toLocaleString()} stitches, ~${r.sk} skein${r.sk>1?'s':''}`,m+34,y+1);y+=30});
+ const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+ try{await S.dl.save({filename:(p.name||'pattern').replace(/[^\w\- ]+/g,'').trim()+'.png',data:blob})}catch(e){if(e&&e.code!=='declined')toast('Couldn’t download the chart')}}
+
+/* ---------- viewer ---------- */
+function makeViewer(el,pat,unsaved,prev){
+ const st=prev?{mode:prev.mode,cell:prev.cell,hl:null}:{mode:'both',cell:Math.max(6,Math.min(20,Math.floor(880/pat.w))),hl:null};let delArm=false;
+ el.innerHTML=`<div class="panel">
+  <div class="vhead"><input class="name" type="text" maxlength="80" value="${esc(pat.name)}" aria-label="Pattern name">
+   <span class="vbtns row"></span></div>
+  <div class="small muted vinfo" style="margin:-6px 0 12px"></div>
+  <div class="vtools"><div class="seg vmode"><button data-m="colors">Colours</button><button data-m="both" class="on">Colours + symbols</button><button data-m="symbols">Symbols</button></div>
+   <label>Zoom <input type="range" class="vzoom" min="3" max="30" value="${st.cell}"></label>
+   ${unsaved?'':`<label>Fabric <select class="vcount">${[11,14,16,18,22,28].map(c=>`<option value="${c}"${c===pat.count?' selected':''}>${c}-count</option>`).join('')}</select></label>`}
+  </div>
+  ${true?`<div class="ptools needsw"><div class="seg vtool"><button data-t="view">View</button><button data-t="paint">🖌 Paint</button><button data-t="erase">Erase</button><button data-t="pick">Pick colour</button></div>
+   <button class="btn vbrush" title="Choose the brush colour"></button>
+   <span class="small muted">Brush size</span><div class="seg vsize"><button data-s="1">1</button><button data-s="2">2</button><button data-s="3">3</button></div>
+   <button class="btn vundo">↶ Undo</button><button class="btn ghost vclear"></button></div><div class="small muted vhint" style="margin:-4px 0 8px"></div>`:''}
+  <div class="chartwrap"><canvas></canvas></div>
+  <div class="summary"></div>${unsaved?'<div class="skipbar"></div>':''}
+  <div class="small muted" style="margin-bottom:6px">Tap a colour to highlight where it goes in the chart. Skein counts are estimates for two strands, with a little extra for waste.</div>
+  <div class="tablewrap"><table><thead><tr><th>Sym</th><th></th><th>DMC</th><th>Name</th><th class="num">Stitches</th><th class="num">Skeins</th><th class="num">Have</th><th>Status</th><th></th></tr></thead><tbody></tbody></table></div>
+ </div>`;
+ const cv=el.querySelector('canvas'),nameI=el.querySelector('.name'),btns=el.querySelector('.vbtns');
+ const draw=()=>drawChart(cv,pat,st);
+ function legend(){
+  const rows=reqs(pat).sort((a,b)=>b.st-a.st);let have=0,needSk=0;
+  el.querySelector('tbody').innerHTML=rows.map(r=>{const h=S.inv[r.id]||0;const[s,t]=status(h,r.sk);if(s==='ok')have++;else needSk+=r.sk-h;
+   return`<tr class="lg${st.hl===r.k?' hl':''}" data-k="${r.k}"><td><span class="sym">${SYMS[r.k%SYMS.length]}</span></td><td><div class="sw sm" style="background:${r.d.hex}"></div></td><td><b>${r.id}</b></td><td>${esc(r.d.name)}</td><td class="num">${r.st.toLocaleString()}</td><td class="num">${r.sk}</td><td class="num">${h}</td><td><span class="pill ${s}">${t}</span></td><td style="white-space:nowrap"><button class="btn needsw" data-swap="${r.id}" title="Replace this colour everywhere with another DMC colour" style="padding:3px 9px;font-size:12.5px;margin-right:4px">Swap</button><button class="btn skipb needsw" data-skip="${r.id}" title="${unsaved?'Leave this colour out of the pattern':'Remove every stitch of this colour'}" style="padding:3px 9px;font-size:12.5px">${unsaved?'Skip':'Remove'}</button></td></tr>`}).join('');
+  const tot=rows.reduce((a,r)=>a+r.st,0);
+  el.querySelector('.summary').innerHTML=`<span><b>${rows.length}</b> colours</span><span><b>${tot.toLocaleString()}</b> stitches</span><span class="pill ok">${have} in stash</span>${rows.length-have?`<span class="pill need">${rows.length-have} to buy · ${needSk} skein${needSk===1?'':'s'}</span>`:'<span class="pill ok">Ready to stitch!</span>'}`;
+  const sbar=el.querySelector('.skipbar');if(sbar)sbar.innerHTML=skipBarHTML();
+  el.querySelector('.vinfo').textContent=`${pat.w} × ${pat.h} stitches · finished size on ${pat.count}-count: ${sizeText(pat.w,pat.h,pat.count)}`}
+ let dirty=false;
+ function tools(){
+  if(!unsaved&&dirty){btns.innerHTML=`<span class="pill part">Unsaved changes</span><button class="btn vdiscard">Discard</button><button class="btn primary vsavechg">Save changes</button>`;return}
+  if(unsaved){btns.innerHTML=`<button class="btn primary vsave needsw">Save pattern</button>`}
+  else{btns.innerHTML=`<label class="check needsw" style="margin:0"><input type="checkbox" class="vlist"${pat.onList?' checked':''}><span>On shopping list</span></label>
+   ${S.dl?'<button class="btn vpng">Download chart</button>':''}<button class="btn danger vdel needsw">${delArm?'Tap again to delete':'Delete'}</button>`}}
+ const pt=el.querySelector('.ptools');const T=unsaved?NS:PS;
+ const snap=()=>({cells:Uint8Array.from(pat.cells),palette:pat.palette.slice()});
+ function afterEdit(){tools();ptools();draw();legend()}
+ function ptools(){if(!pt)return;if(!T.brush||!BY[T.brush])T.brush=pat.palette[0]||'310';
+  pt.querySelectorAll('.vtool button').forEach(b=>b.classList.toggle('on',b.dataset.t===T.tool));
+  pt.querySelectorAll('.vsize button').forEach(b=>b.classList.toggle('on',+b.dataset.s===T.size));
+  const d=BY[T.brush];pt.querySelector('.vbrush').innerHTML=`<span class="sw sm" style="background:${d.hex};display:inline-block;vertical-align:-5px"></span> Brush: <b>${d.id}</b> ${esc(d.name)} ▾`;
+  pt.querySelector('.vundo').disabled=!T.undo.length;const ne=unsaved?NS.edits.size:0;const vcl=pt.querySelector('.vclear');vcl.hidden=!ne;vcl.textContent=`Clear ${ne} painted stitch${ne===1?'':'es'}`;
+  el.querySelector('.vhint').textContent={view:unsaved?'Choose Paint to recolour individual stitches without changing the rest of that colour.':'Touch up this pattern: choose Paint to recolour individual stitches, or use Swap / Remove on a colour in the key. Nothing is changed until you press Save changes.',paint:'Click or drag on the chart to paint. Tip: tap a colour in the key below to make it your brush.',erase:'Click or drag on the chart to leave stitches unstitched.',pick:'Click a stitch on the chart to use its colour as your brush.'}[T.tool];
+  cv.style.cursor=T.tool==='view'?'':'crosshair';cv.style.touchAction=T.tool==='view'?'':'none'}
+ let stroke=null,raf=0;
+ const cellAt=e=>{const r=cv.getBoundingClientRect(),x=Math.floor((e.clientX-r.left)/r.width*pat.w),y=Math.floor((e.clientY-r.top)/r.height*pat.h);return x<0||y<0||x>=pat.w||y>=pat.h?-1:y*pat.w+x};
+ function idxFor(id){let k=pat.palette.indexOf(id);if(k<0){if(pat.palette.length>=CH.length){toast('A pattern can have at most '+CH.length+' colours');return-1}pat.palette.push(id);k=pat.palette.length-1}return k}
+ function paintAt(c){const id=T.tool==='erase'?null:T.brush;let k=255;if(id){k=idxFor(id);if(k<0)return}
+  const x0=c%pat.w,y0=(c-x0)/pat.w,n=T.size,off=Math.floor((n-1)/2);if(unsaved)NS.editDims=pat.w+'x'+pat.h;
+  for(let dy=0;dy<n;dy++)for(let dx=0;dx<n;dx++){const x=x0-off+dx,y=y0-off+dy;if(x<0||y<0||x>=pat.w||y>=pat.h)continue;const i=y*pat.w+x;if(unsaved)NS.edits.set(i,id);pat.cells[i]=k}
+  if(!raf)raf=requestAnimationFrame(()=>{raf=0;draw()})}
+ function recolour(from,to){const k=pat.palette.indexOf(from);if(k<0)return;let t=255;if(to){T.undo.push(snap());t=idxFor(to);if(t<0){T.undo.pop();return}}else T.undo.push(snap());
+  for(let i=0;i<pat.cells.length;i++)if(pat.cells[i]===k)pat.cells[i]=t;dirty=true;if(st.hl===k)st.hl=null;afterEdit();toast(to?`DMC ${from} swapped for ${to} — press Save changes to keep it`:`DMC ${from} removed — press Save changes to keep it`)}
+ if(pt){
+  cv.addEventListener('pointerdown',e=>{if(T.tool==='view'||S.readOnly)return;const c=cellAt(e);if(c<0)return;e.preventDefault();
+   if(T.tool==='pick'){const k=pat.cells[c];if(k===255){toast('That square is unstitched');return}T.brush=pat.palette[k];T.tool='paint';ptools();toast(`Brush set to DMC ${T.brush}`);return}
+   try{cv.setPointerCapture(e.pointerId)}catch(_){}stroke=unsaved?new Map(NS.edits):snap();paintAt(c)});
+  cv.addEventListener('pointermove',e=>{if(!stroke)return;const c=cellAt(e);if(c>=0)paintAt(c)});
+  const end=()=>{if(!stroke)return;T.undo.push(stroke);if(T.undo.length>60)T.undo.shift();stroke=null;if(unsaved)rebuildEdits();else{dirty=true;afterEdit()}};
+  cv.addEventListener('pointerup',end);cv.addEventListener('pointercancel',end);
+  pt.addEventListener('click',e=>{const t=e.target.closest('[data-t]');if(t){T.tool=t.dataset.t;ptools();return}
+   const sz=e.target.closest('[data-s]');if(sz){T.size=+sz.dataset.s;ptools();return}
+   if(e.target.closest('.vbrush')){openPicker('Choose a brush colour',T.brush,null,to=>{T.brush=to;if(T.tool==='view'||T.tool==='pick')T.tool='paint';ptools()},pat.palette);return}
+   if(e.target.closest('.vundo')){if(!T.undo.length)return;if(unsaved){NS.edits=NS.undo.pop();rebuildEdits()}else{const sn=T.undo.pop();pat.cells=sn.cells;pat.palette=sn.palette;dirty=T.undo.length>0;afterEdit()}return}
+   if(e.target.closest('.vclear')){NS.undo.push(new Map(NS.edits));NS.edits=new Map();rebuildEdits()}})}
+ tools();ptools();draw();legend();
+ const sbEl=el.querySelector('.skipbar');if(sbEl)sbEl.addEventListener('click',e=>{const r=e.target.closest('[data-unskip]');if(r){NS.skip.delete(r.dataset.unskip);schedule();return}const us=e.target.closest('[data-unswap]');if(us){NS.swap.delete(us.dataset.unswap);schedule();return}if(e.target.closest('[data-clearall]')){NS.skip.clear();NS.swap.clear();schedule();return}const m=e.target.closest('[data-sm]');if(m){NS.skipMode=m.dataset.sm;schedule()}});
+ el.querySelector('.vmode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;st.mode=b.dataset.m;[...b.parentNode.children].forEach(x=>x.classList.toggle('on',x===b));draw()});
+ el.querySelector('.vzoom').addEventListener('input',e=>{st.cell=+e.target.value;draw()});
+ el.querySelector('tbody').addEventListener('click',e=>{const sb=e.target.closest('[data-skip]');if(sb){if(unsaved)skipColour(sb.dataset.skip);else recolour(sb.dataset.skip,null);return}const sw=e.target.closest('[data-swap]');if(sw){const id=sw.dataset.swap;if(unsaved)openSwap(id);else openPicker(`Replace DMC ${id} ${BY[id].name} with…`,id,id,to=>recolour(id,to),pat.palette);return}const tr=e.target.closest('tr');if(!tr)return;const k=+tr.dataset.k;if(pt&&(T.tool==='paint'||T.tool==='pick')){T.brush=pat.palette[k];T.tool='paint';ptools();toast(`Brush set to DMC ${T.brush}`);return}st.hl=st.hl===k?null:k;draw();legend()});
+ const vc=el.querySelector('.vcount');if(vc)vc.addEventListener('change',async()=>{pat.count=+vc.value;legend();renderShop();try{await backend.patchPattern(pat.id,{count:pat.count})}catch(e){toast(errMsg(e))}});
+ nameI.addEventListener('change',async()=>{const v=nameI.value.trim()||'Untitled';pat.name=v;nameI.value=v;if(unsaved)return;renderPatterns();renderShop();try{await backend.patchPattern(pat.id,{name:v})}catch(e){toast(errMsg(e))}});
+ btns.addEventListener('click',async e=>{
+  if(e.target.closest('.vsave')){if(S.readOnly)return;const p={...pat,name:nameI.value.trim()||'Untitled',id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),created:Date.now(),onList:true};
+   e.target.disabled=true;try{await backend.putPattern(p);if(S.mode==='local')applyPatterns(local.patterns);else{S.patterns[p.id]={...p,_raw:serialize(p).cells};renderPatterns();renderShop()}
+    toast('Saved — added to your shopping list');location.hash='#patterns';openPattern(p.id)}catch(err){e.target.disabled=false;toast(errMsg(err))}}
+  else if(e.target.closest('.vdiscard')){const o=S.patterns[pat.id];if(o){pat.cells=Uint8Array.from(o.cells);pat.palette=o.palette.slice()}T.undo=[];dirty=false;afterEdit();toast('Changes discarded')}
+  else if(e.target.closest('.vsavechg')){if(S.readOnly)return;const cnt=stitchCounts(pat),map=[],pal=[];pat.palette.forEach((id,k)=>{if(cnt[k]){map[k]=pal.length;pal.push(id)}});
+   if(!pal.length){toast('A pattern needs at least one stitch');return}
+   const cells=pat.cells.map(k=>k===255?255:map[k]);pat.cells=cells;pat.palette=pal;const raw=serialize(pat).cells;pat._raw=raw;e.target.disabled=true;
+   try{await backend.patchPattern(pat.id,{palette:pal,cells:raw});T.undo=[];dirty=false;
+    if(S.mode==='local')applyPatterns(local.patterns);else{S.patterns[pat.id]={...S.patterns[pat.id],palette:pal.slice(),cells:Uint8Array.from(cells),_raw:raw};renderPatterns();renderShop()}
+    afterEdit();toast('Changes saved')}catch(err){e.target.disabled=false;toast(errMsg(err))}}
+  else if(e.target.closest('.vpng'))exportPNG(pat);
+  else if(e.target.closest('.vdel')){if(!delArm){delArm=true;tools();setTimeout(()=>{delArm=false;tools()},4000);return}
+   try{await backend.delPattern(pat.id);delete S.patterns[pat.id];if(S.mode==='local')applyPatterns(local.patterns);closePattern(true);renderPatterns();renderShop();toast('Pattern deleted')}catch(err){toast(errMsg(err))}}});
+ btns.addEventListener('change',async e=>{if(!e.target.classList.contains('vlist'))return;pat.onList=e.target.checked;renderShop();try{await backend.patchPattern(pat.id,{onList:pat.onList})}catch(err){toast(errMsg(err))}});
+return{pat,st,legend,ptools,refreshTools:tools,isDirty:()=>dirty,update(p){let changed;Object.assign(pat,{name:p.name,count:p.count,onList:p.onList});
+  if(unsaved){changed=p.cells!==pat.cells;Object.assign(pat,{cells:p.cells,palette:p.palette,w:p.w,h:p.h})}
+  else{changed=!dirty&&p._raw!==pat._raw;if(changed)Object.assign(pat,{cells:Uint8Array.from(p.cells),palette:p.palette.slice(),w:p.w,h:p.h,_raw:p._raw})}
+  if(document.activeElement!==nameI)nameI.value=pat.name;if(vc)vc.value=pat.count;tools();ptools();if(changed)draw();legend()}}}
+const NV={view:null},PV={view:null};
+const PS={tool:'view',brush:null,size:1,undo:[]};
+function renderAllInv(){renderFloss();renderShop();if(NV.view)NV.view.legend();if(PV.view)PV.view.legend()}
+
+/* ---------- new pattern tab ---------- */
+let srcImg=null,genT=null;
+const NS={skip:new Set(),skipMode:'blank',swap:new Map(),tool:'view',brush:null,size:1,edits:new Map(),editDims:'',undo:[]};
+function applyEdits(r){const ids=r.palette.slice(),cells=Uint8Array.from(r.cells);
+ if(NS.edits.size&&NS.editDims===r.w+'x'+r.h){const pos={};ids.forEach((id,k)=>pos[id]=k);
+  for(const[i,id]of NS.edits){if(i>=cells.length)continue;if(id===null){cells[i]=255;continue}let k=pos[id];if(k===undefined){if(ids.length>=CH.length)continue;k=pos[id]=ids.length;ids.push(id)}cells[i]=k}
+  const cnt=new Array(ids.length).fill(0);for(const k of cells)if(k!==255)cnt[k]++;
+  if(cnt.some(c=>!c)){const map=[],nid=[];ids.forEach((id,k)=>{if(cnt[k]){map[k]=nid.length;nid.push(id)}});for(let i=0;i<cells.length;i++)if(cells[i]!==255)cells[i]=map[cells[i]];return{...r,palette:nid,cells}}}
+ return{...r,palette:ids,cells}}
+function rebuildEdits(){if(!NV.view||!NV.base)return;const v=NV.view.pat,p=applyEdits(NV.base);NV.view.update({...p,name:v.name,count:v.count,onList:false})}
+function skipColour(id){if(NV.view&&NV.view.pat.palette.length<=1&&NS.skipMode==='blank'){toast('That’s the last colour left');return}NS.skip.add(id);schedule()}
+function skipBarHTML(){if(!NS.skip.size&&!NS.swap.size)return'';
+ const chip=(attr,id,inner)=>`<button class="pill part" ${attr}="${id}" title="Undo" style="border:0;display:inline-flex;gap:6px;align-items:center;cursor:pointer">${inner} ✕</button>`;
+ const dot=id=>`<span class="sw sm" style="background:${BY[id].hex};width:12px;height:12px;border-radius:3px"></span>`;
+ return`<div class="panel" style="padding:12px 14px;margin:6px 0 12px;background:#fbf6ec">
+ ${NS.swap.size?`<div class="row" style="gap:6px;margin-bottom:${NS.skip.size?8:0}px"><b class="small">Swapped:</b>${[...NS.swap].map(([a,b])=>chip('data-unswap',a,`${dot(a)}${a} → ${dot(b)}${b}`)).join('')}</div>`:''}
+ ${NS.skip.size?`<div class="row" style="justify-content:space-between"><div class="row" style="gap:6px"><b class="small">Skipped:</b>${[...NS.skip].map(id=>chip('data-unskip',id,dot(id)+id)).join('')}</div>
+ <div class="seg"><button data-sm="blank" class="${NS.skipMode==='blank'?'on':''}">Leave unstitched</button><button data-sm="nearest" class="${NS.skipMode==='nearest'?'on':''}">Use other colours</button></div></div>`:''}
+ <div class="small muted" style="margin-top:6px">${NS.skip.size?(NS.skipMode==='blank'?'Skipped areas are left as bare fabric. ':'Skipped areas are filled with the closest colours that aren’t skipped. '):''}Tap a change to undo it, or <a href="#new" data-clearall>undo all</a>.</div></div>`}
+const opts=()=>({width:+$('#optW').value,colors:+$('#optC').value,count:+$('#optCount').value,owned:$('#optOwned').checked,tidy:$('#optTidy').checked,dither:$('#optDither').checked,trans:$('#optTrans').checked,swap:NS.swap,bg:$('#optBg').checked,tol:+$('#optTol').value,skip:NS.skip,skipMode:NS.skipMode});
+function updLabels(){const o=opts();$('#tolLbl').textContent=o.tol;$('#bgTolWrap').hidden=!o.bg;$('#wLbl').textContent=o.width+' stitches';$('#cLbl').textContent=o.colors;
+ if(srcImg){const h=Math.max(1,Math.round(o.width*srcImg.naturalHeight/srcImg.naturalWidth));$('#sizeLbl').textContent=`${o.width} × ${h} stitches · ${sizeText(o.width,h,o.count)}`}}
+function schedule(){updLabels();if(!srcImg)return;clearTimeout(genT);$('#newResult').querySelector('.vinfo')?.insertAdjacentHTML('afterbegin','<span class="spinner"></span> ');genT=setTimeout(run,200)}
+function run(){const o=opts();try{const r=generate(srcImg,o);if(NS.edits.size&&NS.editDims!==r.w+'x'+r.h){NS.edits=new Map();NS.undo=[];toast('Painted stitches were cleared because the pattern size changed')}NV.base=r;const name=NV.view?NV.view.pat.name:(srcImg._name||'New pattern');
+  NV.view=makeViewer($('#newResult'),{...applyEdits(r),name,count:o.count},true,NV.view&&NV.view.st)}catch(e){NV.view=null;$('#newResult').innerHTML=`<div class="panel empty"><h3>Couldn’t make a pattern</h3>${esc(e.message)}${NS.skip.size||NS.swap.size?'<div style="margin-top:14px"><button class="btn" id="unskipAll">Undo skips and swaps</button></div>':''}</div>`;const u=$('#unskipAll');if(u)u.onclick=()=>{NS.skip.clear();NS.swap.clear();schedule()}}}
+['optW','optC','optCount','optOwned','optTidy','optDither','optTrans','optBg','optTol'].forEach(id=>$('#'+id).addEventListener(['optW','optC','optTol'].includes(id)?'input':'change',schedule));
+function loadFile(f){if(!f||!f.type.startsWith('image/')){toast('Please choose an image file');return}
+ const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{srcImg=im;NS.skip.clear();NS.swap.clear();NS.edits=new Map();NS.undo=[];NS.brush=null;NS.tool='view';im._name=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ');NV.view=null;
+   $('#dropInner').innerHTML=`<img src="${rd.result}" alt=""><div class="small muted">${esc(f.name)} · ${im.naturalWidth}×${im.naturalHeight}px — click to change</div>`;schedule()};
+  im.onerror=()=>toast('That image couldn’t be opened');im.src=rd.result};rd.readAsDataURL(f)}
+const drop=$('#drop');drop.addEventListener('click',()=>$('#file').click());$('#file').addEventListener('change',e=>loadFile(e.target.files[0]));
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');loadFile(e.dataTransfer.files[0])});
+
+/* ---------- swap dialog ---------- */
+let pickRef=null,pickEx=null,pickCb=null;
+function swOpt(d){const own=S.inv[d.id]?' · in stash':'';return`<button class="swopt" data-to="${d.id}"><span class="sw sm" style="background:${d.hex}"></span><span><b>${d.id}</b><small>${esc(d.name)}${own}</small></span></button>`}
+function openPicker(title,ref,exclude,cb,palList){pickRef=ref;pickEx=exclude;pickCb=cb;$('#swapTitle').textContent=title;
+ const inPat=(palList||(NV.view?NV.view.pat.palette:[])).filter(x=>x!==exclude).map(x=>BY[x]);
+ $('#swapPat').innerHTML=inPat.length?inPat.map(swOpt).join(''):'<div class="small muted">No other colours yet.</div>';
+ $('#swapQ').value='';renderSwapAll();$('#swapDlg').hidden=false;setTimeout(()=>$('#swapQ').focus(),30)}
+function openSwap(id){openPicker(`Replace DMC ${id} ${BY[id].name} with…`,id,id,to=>{NS.swap.set(id,to);
+ for(const[k,v]of NS.swap)if(k===to&&v===id)NS.swap.delete(k);NS.skip.delete(to);toast(`DMC ${id} swapped for ${to}`);schedule()})}
+function renderSwapAll(){const q=$('#swapQ').value.trim().toLowerCase(),src=(BY[pickRef]||BY['310']).lab;let list;
+ if(q){const n=normId(q).toLowerCase();list=DMC.filter(d=>d.id!==pickEx&&(d.id.toLowerCase().startsWith(n)||d.name.toLowerCase().includes(q))).slice(0,60)}
+ else list=DMC.filter(d=>d.id!==pickEx).map(d=>[d,(d.lab[0]-src[0])**2+(d.lab[1]-src[1])**2+(d.lab[2]-src[2])**2]).sort((a,b)=>a[1]-b[1]).slice(0,24).map(x=>x[0]);
+ $('#swapAll').innerHTML=(q?'':'<div class="small muted" style="grid-column:1/-1">Closest matches:</div>')+(list.length?list.map(swOpt).join(''):'<div class="small muted">No matches.</div>')}
+function closeSwap(){$('#swapDlg').hidden=true;pickCb=null}
+$('#swapQ').addEventListener('input',renderSwapAll);$('#swapClose').addEventListener('click',closeSwap);
+$('#swapDlg').addEventListener('click',e=>{if(e.target.id==='swapDlg'){closeSwap();return}const b=e.target.closest('[data-to]');if(!b||!pickCb)return;const cb=pickCb;closeSwap();cb(b.dataset.to)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#swapDlg').hidden)closeSwap()});
+
+/* ---------- patterns tab ---------- */
+function renderPatterns(){const list=Object.values(S.patterns).sort((a,b)=>b.created-a.created);const g=$('#pGrid');
+ if(!list.length){g.innerHTML=`<div class="panel empty" style="grid-column:1/-1"><h3>No patterns saved yet</h3>Make one on the <a href="#new">New pattern</a> tab.</div>`;return}
+ g.innerHTML='';list.forEach(p=>{const r=reqs(p),have=r.filter(x=>(S.inv[x.id]||0)>=x.sk).length;const b=document.createElement('button');b.className='pcard';b.dataset.id=p.id;
+  b.innerHTML=`<div class="pthumb"></div><div class="pmeta"><b>${esc(p.name)}</b><div class="small muted">${p.w}×${p.h} · ${r.length} colours</div><div style="margin-top:7px" class="row"><span class="pill ${have===r.length?'ok':'need'}">${have===r.length?'All floss in stash':`${r.length-have} colours to buy`}</span>${p.onList?'<span class="pill part">On list</span>':''}</div></div>`;
+  b.querySelector('.pthumb').appendChild(thumb(p,150));g.appendChild(b)})}
+$('#pGrid').addEventListener('click',e=>{const b=e.target.closest('.pcard');if(b)openPattern(b.dataset.id)});
+function openPattern(id){const p=S.patterns[id];if(!p)return;$('#patListWrap').hidden=true;const v=$('#patView');v.hidden=false;
+ v.innerHTML=`<button class="btn ghost back">← All patterns</button><div class="vbody"></div>`;v.querySelector('.back').onclick=()=>closePattern();
+ PS.tool='view';PS.brush=null;PS.undo=[];
+ PV.view=makeViewer(v.querySelector('.vbody'),{...p,cells:Uint8Array.from(p.cells),palette:p.palette.slice()},false);window.scrollTo(0,0)}
+function closePattern(force){if(!force&&PV.view&&PV.view.isDirty()){toast('Save or discard your changes first');return}PV.view=null;$('#patView').hidden=true;$('#patView').innerHTML='';$('#patListWrap').hidden=false}
+document.querySelector('nav a[data-tab="patterns"]').addEventListener('click',()=>{if(location.hash==='#patterns')closePattern()});
+
+/* ---------- shopping ---------- */
+function shopRows(){const need={};
+ Object.values(S.patterns).filter(p=>p.onList).forEach(p=>reqs(p).forEach(r=>{const n=need[r.id]||(need[r.id]={id:r.id,d:r.d,sk:0,pats:[]});n.sk+=r.sk;n.pats.push(p.name)}));
+ return Object.values(need).map(n=>({...n,have:S.inv[n.id]||0,buy:Math.max(0,n.sk-(S.inv[n.id]||0))})).sort((a,b)=>sortKey(a.id)-sortKey(b.id))}
+function renderShop(){const pats=Object.values(S.patterns).sort((a,b)=>b.created-a.created);
+ $('#shopPats').innerHTML=pats.length?pats.map(p=>`<label><input type="checkbox" data-id="${p.id}"${p.onList?' checked':''}>${esc(p.name)}</label>`).join(''):'<div class="small muted">No saved patterns yet.</div>';
+ const rows=shopRows(),buy=rows.filter(r=>r.buy>0),covered=rows.filter(r=>!r.buy);
+ const badge=$('#shopBadge');badge.hidden=!buy.length;badge.textContent=buy.length;
+ const body=$('#shopBody');
+ if(!rows.length){body.innerHTML=`<div class="empty"><h3>Nothing planned</h3>Tick a pattern on the left to see what floss it needs.</div>`;return}
+ const tot=buy.reduce((a,r)=>a+r.buy,0);
+ body.innerHTML=(buy.length?`<h3 style="font-size:19px;margin-bottom:4px">To buy: ${buy.length} colour${buy.length>1?'s':''}, ${tot} skein${tot>1?'s':''}</h3><div class="small muted" style="margin-bottom:10px">Tap “Bought” when you get home and it goes straight into your stash.</div>
+  <div class="tablewrap"><table><thead><tr><th></th><th>DMC</th><th>Name</th><th class="num">Needed</th><th class="num">Have</th><th class="num">Buy</th><th></th></tr></thead><tbody>${buy.map(r=>`<tr title="For: ${esc(r.pats.join(', '))}"><td><div class="sw sm" style="background:${r.d.hex}"></div></td><td><b>${r.id}</b></td><td>${esc(r.d.name)}</td><td class="num">${r.sk}</td><td class="num">${r.have}</td><td class="num"><b>${r.buy}</b></td><td><button class="btn needsw" data-buy="${r.id}" data-n="${r.buy}" style="padding:4px 10px;font-size:13px">Bought</button></td></tr>`).join('')}</tbody></table></div>`
+  :`<div class="empty"><h3>You’re all set</h3>Your stash covers every planned pattern.</div>`)
+  +(covered.length?`<details style="margin-top:16px"><summary class="small muted" style="cursor:pointer">Already in my stash (${covered.length})</summary><div class="row" style="margin-top:10px;gap:6px">${covered.map(r=>`<span class="pill ok" style="display:inline-flex;gap:6px;align-items:center"><span class="sw sm" style="background:${r.d.hex};width:12px;height:12px;border-radius:3px"></span>${r.id}</span>`).join('')}</div></details>`:'')}
+$('#shopPats').addEventListener('change',async e=>{const id=e.target.dataset.id,p=S.patterns[id];if(!p)return;p.onList=e.target.checked;renderShop();renderPatterns();if(PV.view&&PV.view.pat.id===id)PV.view.update(p);try{await backend.patchPattern(id,{onList:p.onList})}catch(err){toast(errMsg(err))}});
+$('#shopBody').addEventListener('click',e=>{const b=e.target.closest('[data-buy]');if(!b)return;const id=b.dataset.buy;setQty(id,(S.inv[id]||0)+(+b.dataset.n));toast(`Added DMC ${id} to your stash`)});
+function shopText(){return shopRows().filter(r=>r.buy).map(r=>`DMC ${r.id} – ${r.d.name} × ${r.buy}`).join('\n')}
+$('#copyShop').addEventListener('click',async()=>{const t=shopText();if(!t){toast('Nothing to buy right now');return}try{await navigator.clipboard.writeText('DMC floss to buy\n'+t);toast('List copied — paste it into a note or message')}catch(e){toast('Couldn’t copy — try selecting the table instead')}});
+$('#csvShop').addEventListener('click',async()=>{const rows=shopRows().filter(r=>r.buy);if(!rows.length){toast('Nothing to buy right now');return}
+ const csv='DMC,Name,Needed,Have,Buy\n'+rows.map(r=>`${r.id},"${r.d.name}",${r.sk},${r.have},${r.buy}`).join('\n');
+ try{await S.dl.save({filename:'floss-shopping-list.csv',data:csv})}catch(e){if(e&&e.code!=='declined')toast('Couldn’t download')}});
+
+function renderAll(){renderFloss();renderPatterns();renderShop();updLabels()}
+route();init();
+</script>
+</body>
+</html>
