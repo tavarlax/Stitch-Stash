@@ -180,6 +180,15 @@ html{-webkit-tap-highlight-color:transparent}
  .dlg{align-items:flex-end;padding:0}
  .dlgbox{border-radius:18px 18px 0 0;max-height:88vh;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
 }
+.impgrid{display:grid;grid-template-columns:160px 1fr;gap:16px;align-items:start}
+.impthumb{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff}
+.pdfthumb{max-width:100%;max-height:150px;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.pdfwrap{overflow:auto;max-height:75vh;border:1px solid var(--line);border-radius:10px;background:#e9e3d8;-webkit-overflow-scrolling:touch}
+.pdfpages{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:0}
+.pdfpage{background:#fff;position:relative;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.pdfpage canvas{display:block;position:absolute;inset:0}
+.pnum{position:absolute;top:8px;left:8px;font-size:12px;color:#aaa}
+@media (max-width:560px){.impgrid{grid-template-columns:110px 1fr}}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#2b2420;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:90vw}
 #toast.on{opacity:1;transform:translateX(-50%)}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid #ddd;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
@@ -270,7 +279,8 @@ html{-webkit-tap-highlight-color:transparent}
 <!-- PATTERNS -->
 <section id="tab-patterns">
  <div id="patListWrap">
-  <div class="pagehead"><div><h2>Patterns</h2><div class="muted small">Everything you’ve saved. Open one to see the chart and what floss it needs.</div></div></div>
+  <div class="pagehead"><div><h2>Patterns</h2><div class="muted small">Everything you’ve saved. Open one to see the chart and what floss it needs.</div>
+  <div class="row"><button class="btn primary" id="importPdfBtn">Import PDF pattern</button><input type="file" id="pdfFile" accept="application/pdf,.pdf" hidden></div></div></div>
   <div class="pgrid" id="pGrid"></div>
  </div>
  <div id="patView" hidden></div>
@@ -320,7 +330,7 @@ html{-webkit-tap-highlight-color:transparent}
    <h3 style="font-size:19px;margin-bottom:6px">Backup</h3>
    <p class="small muted" style="margin-top:0" id="dataSummary"></p>
    <div class="row"><button class="btn" id="exportBtn">Export backup</button><button class="btn" id="importBtn">Import backup</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>
-   <p class="small muted">Importing merges the backup with what’s already here — nothing is deleted.</p>
+   <p class="small muted">Importing merges the backup with what’s already here — nothing is deleted. Backups include your floss lists for imported PDF patterns but not the PDF files themselves; keep your originals.</p>
    <h3 style="font-size:19px;margin:20px 0 6px">Install on your phone</h3>
    <p class="small muted" style="margin:0"><b>iPhone/iPad:</b> open this page in Safari, tap Share, then <b>Add to Home Screen</b>.<br><b>Android:</b> in Chrome, tap ⋮ then <b>Install app</b> or <b>Add to Home screen</b>.</p>
   </div>
@@ -329,7 +339,7 @@ html{-webkit-tap-highlight-color:transparent}
 </main>
 <div id="swapDlg" class="dlg" hidden><div class="panel dlgbox" role="dialog" aria-modal="true" aria-labelledby="swapTitle">
  <div class="row" style="justify-content:space-between;margin-bottom:12px"><h3 id="swapTitle" style="font-size:19px"></h3><button class="btn ghost" id="swapClose" aria-label="Close">✕</button></div>
- <div class="small muted" style="margin-bottom:6px;font-weight:600">Colours already in this pattern</div>
+ <div id="swapPatLbl" class="small muted" style="margin-bottom:6px;font-weight:600">Colours already in this pattern</div>
  <div class="swgrid" id="swapPat"></div>
  <div class="small muted" style="margin:14px 0 6px;font-weight:600">Any DMC colour</div>
  <input type="search" id="swapQ" placeholder="Search by number or name, e.g. 310 or black" style="width:100%;margin-bottom:8px">
@@ -889,6 +899,7 @@ async function flush(id){
 function serialize(p){let s='';for(let i=0;i<p.cells.length;i++)s+=p.cells[i]===255?'.':CH[p.cells[i]];
  return{name:p.name,w:p.w,h:p.h,count:p.count,palette:p.palette,cells:s,created:p.created||Date.now(),onList:!!p.onList}}
 function decode(id,v,prev){
+ if(v&&v.kind==='pdf')return{id,kind:'pdf',name:String(v.name||'Untitled'),floss:(Array.isArray(v.floss)?v.floss:[]).filter(f=>f&&BY[f.id]).map(f=>({id:f.id,skeins:Math.max(1,+f.skeins||1)})),thumb:typeof v.thumb==='string'&&v.thumb.startsWith('data:image/')?v.thumb:'',file:v.file||{},created:v.created||0,onList:!!v.onList};
  if(!v||typeof v.cells!=='string'||!Array.isArray(v.palette))return null;
  let cells;if(prev&&prev._raw===v.cells)cells=prev.cells;else{cells=new Uint8Array(v.cells.length);for(let i=0;i<v.cells.length;i++){const c=v.cells[i];cells[i]=c==='.'?255:CH.indexOf(c)}}
  const palette=v.palette.map(String).filter(x=>BY[x]);if(palette.length!==v.palette.length)return null;
@@ -956,6 +967,7 @@ async function syncNow(){
    local=merged;saveLocal();if(localChanged)applyAll();
    if(!remoteChanged||await push(merged,sha))break;
    if(attempt>=3)throw new Error('GitHub kept reporting a conflict — try again in a moment.')}
+  await syncPdfs();
   syncCfg.lastSync=Date.now();syncCfg.error='';saveCfg()}
  catch(e){if(syncCfg){syncCfg.error=e.message;saveCfg()}}
  syncing=false;showSyncStatus();renderSettings();
@@ -963,7 +975,7 @@ async function syncNow(){
 function flushNowSync(id){if(inflight[id])return;const q=pend[id];local.floss[id]={qty:q,at:Date.now()};delete pend[id];clearTimeout(tmr[id])}
 
 /* ---------- settings ---------- */
-function renderSettings(){
+function renderSettings(){if(!local)return;
  const on=!!syncCfg;$('#syncOff').hidden=on;$('#syncOn').hidden=!on;
  if(on){$('#syncRepo').textContent=syncCfg.repo;$('#syncWhen').textContent=syncCfg.lastSync?'Last synced '+ago(syncCfg.lastSync)+'.':'Not synced yet.';
   const er=$('#syncErr');er.hidden=!syncCfg.error;er.textContent=syncCfg.error||''}
@@ -1110,7 +1122,7 @@ function generate(img,o){
 /* ---------- requirements ---------- */
 function stitchCounts(p){const c=new Array(p.palette.length).fill(0);for(const k of p.cells)if(k!==255)c[k]++;return c}
 function skeinsFor(st,count){const per=1800*(count/14);return Math.max(1,Math.ceil(st*1.2/per))}
-function reqs(p){const c=stitchCounts(p);return p.palette.map((id,k)=>({k,id,d:BY[id],st:c[k],sk:skeinsFor(c[k],p.count)})).filter(r=>r.st>0)}
+function reqs(p){if(p.kind==='pdf')return p.floss.map((f,k)=>({k,id:f.id,d:BY[f.id],st:0,sk:f.skeins}));const c=stitchCounts(p);return p.palette.map((id,k)=>({k,id,d:BY[id],st:c[k],sk:skeinsFor(c[k],p.count)})).filter(r=>r.st>0)}
 function status(have,need){return have>=need?['ok','✓ Have']:have>0?['part',`Need ${need-have} more`]:['need',`Need ${need}`]}
 function sizeText(w,h,count){const iw=w/count,ih=h/count;return`${iw.toFixed(1)} × ${ih.toFixed(1)} in (${(iw*2.54).toFixed(1)} × ${(ih*2.54).toFixed(1)} cm)`}
 
@@ -1288,7 +1300,7 @@ let pickRef=null,pickEx=null,pickCb=null;
 function swOpt(d){const own=S.inv[d.id]?' · in stash':'';return`<button class="swopt" data-to="${d.id}"><span class="sw sm" style="background:${d.hex}"></span><span><b>${d.id}</b><small>${esc(d.name)}${own}</small></span></button>`}
 function openPicker(title,ref,exclude,cb,palList){pickRef=ref;pickEx=exclude;pickCb=cb;$('#swapTitle').textContent=title;
  const inPat=(palList||(NV.view?NV.view.pat.palette:[])).filter(x=>x!==exclude).map(x=>BY[x]);
- $('#swapPat').innerHTML=inPat.length?inPat.map(swOpt).join(''):'<div class="small muted">No other colours yet.</div>';
+ const hidePat=!!palList&&!palList.length;$('#swapPatLbl').hidden=hidePat;$('#swapPat').hidden=hidePat;$('#swapPat').innerHTML=inPat.length?inPat.map(swOpt).join(''):'<div class="small muted">No other colours yet.</div>';
  $('#swapQ').value='';renderSwapAll();$('#swapDlg').hidden=false;setTimeout(()=>$('#swapQ').focus(),30)}
 function openSwap(id){openPicker(`Replace DMC ${id} ${BY[id].name} with…`,id,id,to=>{NS.swap.set(id,to);
  for(const[k,v]of NS.swap)if(k===to&&v===id)NS.swap.delete(k);NS.skip.delete(to);toast(`DMC ${id} swapped for ${to}`);schedule()})}
@@ -1301,18 +1313,162 @@ $('#swapQ').addEventListener('input',renderSwapAll);$('#swapClose').addEventList
 $('#swapDlg').addEventListener('click',e=>{if(e.target.id==='swapDlg'){closeSwap();return}const b=e.target.closest('[data-to]');if(!b||!pickCb)return;const cb=pickCb;closeSwap();cb(b.dataset.to)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#swapDlg').hidden)closeSwap()});
 
+/* ---------- PDF pattern storage (on-device files) ---------- */
+const IDB={db:null,
+ open(){if(this.db)return this.db;this.db=new Promise((res,rej)=>{const r=indexedDB.open('stitchstash-files',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});return this.db},
+ async tx(mode,fn){const db=await this.open();return new Promise((res,rej)=>{const t=db.transaction('files',mode),st=t.objectStore('files'),r=fn(st);t.oncomplete=()=>res(r&&r.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})},
+ get(k){return this.tx('readonly',s=>s.get(k))},put(k,v){return this.tx('readwrite',s=>s.put(v,k))},del(k){return this.tx('readwrite',s=>s.delete(k))}};
+const PDFKEY=id=>'pdf:'+id;
+let pdfjsP=null;
+function pdfjs(){if(!pdfjsP)pdfjsP=import(new URL('lib/pdf.min.js',location.href).href).then(m=>{m.GlobalWorkerOptions.workerSrc=new URL('lib/pdf.worker.min.js',location.href).href;return m}).catch(e=>{pdfjsP=null;throw new Error('Couldn’t load the PDF reader. Check your connection and try again.')});return pdfjsP}
+function closePdf(d){try{if(d.loadingTask&&d.loadingTask.destroy)d.loadingTask.destroy();else if(d.destroy)d.destroy()}catch(_){}}
+async function openPdf(blob){const lib=await pdfjs();const data=new Uint8Array(await blob.arrayBuffer());return lib.getDocument({data,isEvalSupported:false}).promise}
+
+/* ---------- reading the floss key ---------- */
+const GENERIC=new Set(['very','light','dark','medium','ultra','pale','bright','deep','vy','lt','dk','med','and','the']);
+const NAMEWORDS={};DMC.forEach(d=>NAMEWORDS[d.id]=d.name.toLowerCase().split(/[\s-]+/).filter(w=>w.length>=3&&!GENERIC.has(w)));
+function tokenId(t,prev){const l=t.toLowerCase().replace(/^#/,'');
+ if(l==='blanc'||(l==='white'&&prev==='dmc'))return'White';if(l==='ecru')return'Ecru';if(l==='b5200'||(l==='5200'&&prev==='dmc'))return'B5200';
+ if(/^\d{2,4}$/.test(l)&&BY[l])return l;return null}
+async function pdfLines(doc,maxPages=80){const out=[];const n=Math.min(doc.numPages,maxPages);
+ for(let p=1;p<=n;p++){const page=await doc.getPage(p);const tc=await page.getTextContent();const rows=[];
+  for(const it of tc.items){if(!it.str||!it.str.trim())continue;const y=it.transform[5],x=it.transform[4];let r=rows.find(r=>Math.abs(r.y-y)<3);if(!r){r={y,items:[]};rows.push(r)}r.items.push({x,s:it.str})}
+  rows.sort((a,b)=>b.y-a.y).forEach(r=>out.push(r.items.sort((a,b)=>a.x-b.x).map(i=>i.s).join(' ')));page.cleanup()}
+ return out}
+function detectFloss(lines){const found=[],seen=new Set();
+ for(const line of lines){const low=line.toLowerCase();const toks=low.split(/[\s,;:|()\[\]\/]+/).filter(Boolean);
+  const hasDmc=/\bdmc\b/.test(low);
+  toks.forEach((t,i)=>{const id=tokenId(t,toks[i-1]);if(!id||seen.has(id))return;
+   const words=NAMEWORDS[id]||[];const nameHit=words.length?words.some(w=>low.includes(w)):false;
+   const special=id==='White'||id==='Ecru'||id==='B5200';
+   if(nameHit||special||(hasDmc&&id.length>=3&&toks[i-1]==='dmc')){seen.add(id);found.push(id)}})}
+ return found}
+async function pdfThumb(doc,w=360){const page=await doc.getPage(1);const v0=page.getViewport({scale:1});const vp=page.getViewport({scale:w/v0.width});
+ const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+ await page.render({canvasContext:x,viewport:vp}).promise;page.cleanup();return c.toDataURL('image/jpeg',0.72)}
+
+/* ---------- import flow ---------- */
+$('#importPdfBtn').addEventListener('click',()=>$('#pdfFile').click());
+$('#pdfFile').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)startImport(f)});
+let IMP=null;
+async function startImport(file){
+ if(!/pdf$/i.test(file.type)&&!/\.pdf$/i.test(file.name)){toast('Please choose a PDF file');return}
+ if(PV.view&&PV.view.isDirty&&PV.view.isDirty()){toast('Save or discard your changes first');return}
+ PV.view=null;$('#patListWrap').hidden=true;const v=$('#patView');v.hidden=false;
+ v.innerHTML=`<button class="btn ghost back">← Cancel</button><div class="panel empty"><span class="spinner"></span> Reading ${esc(file.name)}…</div>`;v.querySelector('.back').onclick=()=>{IMP=null;closePattern(true)};
+ try{const doc=await openPdf(file);const [thumb,lines]=await Promise.all([pdfThumb(doc),pdfLines(doc)]);let title='';try{title=((await doc.getMetadata()).info||{}).Title||''}catch(_){}
+  const name=(title&&title.length<80&&!/untitled|microsoft|\.pdf$/i.test(title)?title:file.name.replace(/\.pdf$/i,'').replace(/[_-]+/g,' ')).trim();
+  IMP={file,thumb,pages:doc.numPages,name,floss:detectFloss(lines).map(id=>({id,skeins:1})),scanned:lines.join('').trim().length<20};closePdf(doc);renderImport()}
+ catch(err){v.innerHTML=`<button class="btn ghost back">← Back</button><div class="panel empty"><h3>Couldn’t open that PDF</h3>${esc(err.message||'It may be damaged or password-protected.')}</div>`;v.querySelector('.back').onclick=()=>closePattern(true)}}
+function flossRowsHTML(list,editable){return list.map((f,i)=>{const d=BY[f.id];const h=S.inv[f.id]||0;const[s,t]=status(h,f.skeins);
+ return`<tr data-i="${i}"><td><div class="sw sm" style="background:${d.hex}"></div></td><td><b>${d.id}</b></td><td>${esc(d.name)}</td>
+ <td class="num">${editable?`<div class="step" style="display:inline-flex"><button data-sk="-1" aria-label="Fewer skeins">−</button><span>${f.skeins}</span><button data-sk="1" aria-label="More skeins">+</button></div>`:f.skeins}</td>
+ ${editable?'<td><button class="btn danger" data-rm style="padding:3px 9px;font-size:12.5px">Remove</button></td>':`<td class="num">${h}</td><td><span class="pill ${s}">${t}</span></td>`}</tr>`}).join('')}
+function flossEditor(host,list,onChange){
+ host.innerHTML=`<div class="tablewrap"><table><thead><tr><th></th><th>DMC</th><th>Name</th><th class="num">Skeins</th><th></th></tr></thead><tbody></tbody></table></div>
+ <div class="row" style="margin-top:10px"><button class="btn addc">+ Add colour</button><span class="small muted">Set how many skeins of each the pattern needs — check the key in the PDF.</span></div>`;
+ const tb=host.querySelector('tbody');const draw=()=>{tb.innerHTML=list.length?flossRowsHTML(list,true):'<tr><td colspan="5" class="muted small" style="padding:14px 8px">No colours yet — tap “+ Add colour”.</td></tr>';onChange&&onChange()};
+ tb.addEventListener('click',e=>{const tr=e.target.closest('tr[data-i]');if(!tr)return;const i=+tr.dataset.i;const sk=e.target.closest('[data-sk]');
+  if(sk){list[i].skeins=Math.max(1,Math.min(99,list[i].skeins+(+sk.dataset.sk)));draw()}else if(e.target.closest('[data-rm]')){list.splice(i,1);draw()}});
+ host.querySelector('.addc').addEventListener('click',()=>openPicker('Add a floss colour',list.length?list[list.length-1].id:'310',null,to=>{if(list.some(f=>f.id===to)){toast(`DMC ${to} is already in the list`);return}list.push({id:to,skeins:1});draw()},[]));
+ draw()}
+function renderImport(){const v=$('#patView');const m=IMP;
+ v.innerHTML=`<button class="btn ghost back">← Cancel</button><div class="panel">
+  <div class="impgrid"><img class="impthumb" src="${m.thumb}" alt="First page of the PDF">
+  <div><label class="flabel" style="margin-top:0">Pattern name<input type="text" class="impname" maxlength="80" value="${esc(m.name)}"></label>
+   <div class="small muted" style="margin-top:8px">${esc(m.file.name)} · ${m.pages} page${m.pages===1?'':'s'} · ${(m.file.size/1048576).toFixed(1)} MB</div>
+   <div class="impmsg small" style="margin-top:10px"></div></div></div>
+  <h3 style="font-size:18px;margin:18px 0 6px">Floss for this pattern</h3><div class="impfloss"></div>
+  <div class="row" style="margin-top:16px;justify-content:flex-end"><label class="check" style="margin:0"><input type="checkbox" class="implist" checked><span>Add to shopping list</span></label><button class="btn primary impsave">Save pattern</button></div></div>`;
+ v.querySelector('.back').onclick=()=>{IMP=null;closePattern(true)};
+ const msg=v.querySelector('.impmsg');
+ msg.innerHTML=m.scanned?'<span class="pill part">No text found</span> This PDF looks like a scan, so the floss key couldn’t be read. Add the colours from its key below.':m.floss.length?`<span class="pill ok">Found ${m.floss.length} DMC colour${m.floss.length===1?'':'s'}</span> Please check them against the key in the PDF — add any that were missed and remove any that don’t belong.`:'<span class="pill part">No key found</span> Couldn’t spot a DMC floss key in this PDF. Add the colours from its key below.';
+ flossEditor(v.querySelector('.impfloss'),m.floss);
+ v.querySelector('.impsave').addEventListener('click',async e=>{const name=v.querySelector('.impname').value.trim()||'Untitled';
+  if(!m.floss.length&&!confirmEmpty){confirmEmpty=true;toast('No colours added yet — tap Save again to save it anyway');return}confirmEmpty=false;
+  e.target.disabled=true;const id='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  try{await IDB.put(PDFKEY(id),m.file)}catch(err){e.target.disabled=false;toast('Your device doesn’t have room to store this PDF');return}
+  local.patterns[id]={kind:'pdf',name,floss:m.floss.map(f=>({id:f.id,skeins:f.skeins})),thumb:m.thumb,file:{name:m.file.name,size:m.file.size,pages:m.pages},created:Date.now(),onList:v.querySelector('.implist').checked,at:Date.now()};
+  delete local.deleted[id];commit();IMP=null;applyPatterns();toast('Pattern imported');openPattern(id)})}
+let confirmEmpty=false;
+
+/* ---------- viewing an imported PDF pattern ---------- */
+function makePdfViewer(el,pat){
+ let editing=null,delArm=false,doc=null,zoom=1,obs=null;
+ el.innerHTML=`<div class="panel">
+  <div class="vhead"><input class="name" type="text" maxlength="80" value="${esc(pat.name)}" aria-label="Pattern name"><span class="vbtns row"></span></div>
+  <div class="small muted" style="margin:-6px 0 12px">PDF pattern · ${pat.file.pages||'?'} page${pat.file.pages===1?'':'s'} · ${esc(pat.file.name||'')}</div>
+  <div class="vtools"><span class="small muted">Zoom</span><div class="seg pzoom">${[1,1.5,2,3].map(z=>`<button data-z="${z}" class="${z===1?'on':''}">${z===1?'Fit':z*100+'%'}</button>`).join('')}</div></div>
+  <div class="pdfwrap"><div class="pdfpages"><div class="empty small"><span class="spinner"></span> Loading pattern…</div></div></div>
+  <div class="summary"></div><div class="pfloss"></div></div>`;
+ const btns=el.querySelector('.vbtns'),nameI=el.querySelector('.name'),wrap=el.querySelector('.pdfwrap'),pagesEl=el.querySelector('.pdfpages');
+ function tools(){btns.innerHTML=editing?'':`<label class="check" style="margin:0"><input type="checkbox" class="vlist"${pat.onList?' checked':''}><span>On shopping list</span></label><button class="btn vedit">Edit floss</button><button class="btn danger vdel">${delArm?'Tap again to delete':'Delete'}</button>`}
+ function legend(){const fl=el.querySelector('.pfloss'),sm=el.querySelector('.summary');
+  if(editing){sm.innerHTML='<b>Editing floss list</b>';return}
+  const rows=pat.floss.filter(f=>BY[f.id]);let have=0,need=0;rows.forEach(f=>{const h=S.inv[f.id]||0;if(h>=f.skeins)have++;else need+=f.skeins-h});
+  sm.innerHTML=rows.length?`<span><b>${rows.length}</b> colours</span><span class="pill ok">${have} in stash</span>${rows.length-have?`<span class="pill need">${rows.length-have} to buy · ${need} skein${need===1?'':'s'}</span>`:'<span class="pill ok">Ready to stitch!</span>'}`:'<span class="muted">No floss listed yet — tap “Edit floss” to add the colours from the key.</span>';
+  fl.innerHTML=rows.length?`<div class="tablewrap"><table><thead><tr><th></th><th>DMC</th><th>Name</th><th class="num">Skeins</th><th class="num">Have</th><th>Status</th></tr></thead><tbody>${flossRowsHTML(rows,false)}</tbody></table></div>`:''}
+ function startEdit(){editing=pat.floss.map(f=>({...f}));tools();legend();const fl=el.querySelector('.pfloss');fl.innerHTML='<div class="ed"></div><div class="row" style="margin-top:12px;justify-content:flex-end"><button class="btn edcancel">Cancel</button><button class="btn primary edsave">Save floss list</button></div>';
+  flossEditor(fl.querySelector('.ed'),editing);
+  fl.querySelector('.edcancel').onclick=()=>{editing=null;tools();legend()};
+  fl.querySelector('.edsave').onclick=async()=>{pat.floss=editing;editing=null;await backend.patchPattern(pat.id,{floss:pat.floss.map(f=>({id:f.id,skeins:f.skeins}))});applyPatterns();tools();legend();toast('Floss list saved')}}
+ btns.addEventListener('click',async e=>{
+  if(e.target.closest('.vedit'))startEdit();
+  else if(e.target.closest('.vdel')){if(!delArm){delArm=true;tools();setTimeout(()=>{delArm=false;tools()},4000);return}
+   await backend.delPattern(pat.id);IDB.del(PDFKEY(pat.id)).catch(()=>{});closePattern(true);applyPatterns();toast('Pattern deleted')}});
+ btns.addEventListener('change',async e=>{if(!e.target.classList.contains('vlist'))return;pat.onList=e.target.checked;await backend.patchPattern(pat.id,{onList:pat.onList});applyPatterns()});
+ nameI.addEventListener('change',async()=>{const v=nameI.value.trim()||'Untitled';pat.name=v;nameI.value=v;await backend.patchPattern(pat.id,{name:v});applyPatterns()});
+ el.querySelector('.pzoom').addEventListener('click',e=>{const b=e.target.closest('[data-z]');if(!b)return;zoom=+b.dataset.z;[...b.parentNode.children].forEach(x=>x.classList.toggle('on',x===b));layout()});
+ // pages
+ async function layout(){if(!doc)return;const W=Math.max(200,wrap.clientWidth-2)*zoom;if(obs)obs.disconnect();pagesEl.innerHTML='';
+  for(let i=1;i<=doc.numPages;i++){const page=await doc.getPage(i);const v0=page.getViewport({scale:1});const h=Math.round(W*v0.height/v0.width);
+   const d=document.createElement('div');d.className='pdfpage';d.style.width=W+'px';d.style.height=h+'px';d.dataset.p=i;d.innerHTML=`<span class="pnum">Page ${i}</span>`;pagesEl.appendChild(d)}
+  obs=new IntersectionObserver(ents=>ents.forEach(en=>{const d=en.target;if(en.isIntersecting)renderPage(d,W);else{const c=d.querySelector('canvas');if(c){c.width=0;c.height=0;c.remove()}d.dataset.r=''}}),{root:wrap,rootMargin:'800px 0px'});
+  pagesEl.querySelectorAll('.pdfpage').forEach(d=>obs.observe(d))}
+ async function renderPage(d,W){if(d.dataset.r)return;d.dataset.r='1';const page=await doc.getPage(+d.dataset.p);const v0=page.getViewport({scale:1});
+  const dpr=Math.min(2.5,window.devicePixelRatio||1);let sc=W/v0.width*dpr;const maxPx=16e6;if(v0.width*v0.height*sc*sc>maxPx)sc=Math.sqrt(maxPx/(v0.width*v0.height));
+  const vp=page.getViewport({scale:sc});const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);c.style.width='100%';c.style.height='100%';
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);d.appendChild(c);
+  try{await page.render({canvasContext:x,viewport:vp}).promise}catch(_){}}
+ (async()=>{try{let blob=await IDB.get(PDFKEY(pat.id)).catch(()=>null);
+   if(!blob&&syncCfg){pagesEl.innerHTML='<div class="empty small"><span class="spinner"></span> Downloading the PDF from GitHub…</div>';blob=await downloadPdf(pat.id);if(blob)IDB.put(PDFKEY(pat.id),blob).catch(()=>{})}
+   if(!blob){pagesEl.innerHTML=`<div class="empty small">The PDF file isn’t on this device${syncCfg?' or in GitHub yet':''}. ${syncCfg?'If you imported it on another device, open the app there so it can upload it.':'Turn on GitHub sync in Settings to bring PDFs across devices, or import the PDF again here.'}<br><img src="${pat.thumb}" alt="" style="max-width:240px;margin-top:12px;border-radius:6px"></div>`;return}
+   doc=await openPdf(blob);if(!el.isConnected){closePdf(doc);return}await layout()}
+  catch(err){pagesEl.innerHTML=`<div class="empty small">${esc(err.message||'Couldn’t open the PDF.')}</div>`}})();
+ tools();legend();
+ return{pat,legend,isDirty:()=>!!editing,refreshTools:tools,ptools(){},update(p){Object.assign(pat,{name:p.name,onList:p.onList,thumb:p.thumb});if(!editing)pat.floss=p.floss.map(f=>({...f}));if(document.activeElement!==nameI)nameI.value=pat.name;tools();legend()},
+  destroy(){if(obs)obs.disconnect();if(doc)closePdf(doc)}}}
+
+/* ---------- PDF files on GitHub ---------- */
+const PDFSYNC_KEY='stitchstash-pdfsync';
+function pdfSyncState(){try{return JSON.parse(localStorage.getItem(PDFSYNC_KEY)||'{}')}catch(e){return{}}}
+function savePdfSync(s){try{localStorage.setItem(PDFSYNC_KEY,JSON.stringify(s))}catch(e){}}
+const pdfPath=id=>`/repos/${syncCfg.repo}/contents/pdfs/${id}.pdf`;
+function blobB64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=()=>rej(r.error);r.readAsDataURL(blob)})}
+async function downloadPdf(id){try{const r=await gh('GET',pdfPath(id),null,'application/vnd.github.raw+json');if(!r.ok)return null;return new Blob([await r.arrayBuffer()],{type:'application/pdf'})}catch(e){return null}}
+async function syncPdfs(){const st=pdfSyncState();let changed=false;
+ for(const[id,p]of Object.entries(local.patterns)){if(!p||p.kind!=='pdf'||st[id]==='up')continue;
+  const blob=await IDB.get(PDFKEY(id)).catch(()=>null);if(!blob)continue;
+  if(blob.size>25*1048576){st[id]='toobig';changed=true;continue}
+  let sha;const g=await gh('GET',pdfPath(id));if(g.ok)sha=(await g.json()).sha;else if(g.status!==404)throw await ghFail(g);
+  const r=await gh('PUT',pdfPath(id),{message:'Add pattern PDF',content:await blobB64(blob),...(sha?{sha}:{})});if(!r.ok)throw await ghFail(r);st[id]='up';changed=true}
+ for(const id of Object.keys(local.deleted)){if(st[id]==='gone')continue;
+  const g=await gh('GET',pdfPath(id));if(g.ok){const sha=(await g.json()).sha;const d=await gh('DELETE',pdfPath(id),{message:'Remove pattern PDF',sha});if(!d.ok)continue}else if(g.status!==404)continue;st[id]='gone';changed=true}
+ if(changed)savePdfSync(st)}
+
 /* ---------- patterns tab ---------- */
 function renderPatterns(){const list=Object.values(S.patterns).sort((a,b)=>b.created-a.created);const g=$('#pGrid');
- if(!list.length){g.innerHTML=`<div class="panel empty" style="grid-column:1/-1"><h3>No patterns saved yet</h3>Make one on the <a href="#new">New pattern</a> tab.</div>`;return}
+ if(!list.length){g.innerHTML=`<div class="panel empty" style="grid-column:1/-1"><h3>No patterns saved yet</h3>Make one on the <a href="#new">New pattern</a> tab, or tap <b>Import PDF pattern</b> to add one you already have.</div>`;return}
  g.innerHTML='';list.forEach(p=>{const r=reqs(p),have=r.filter(x=>(S.inv[x.id]||0)>=x.sk).length;const b=document.createElement('button');b.className='pcard';b.dataset.id=p.id;
-  b.innerHTML=`<div class="pthumb"></div><div class="pmeta"><b>${esc(p.name)}</b><div class="small muted">${p.w}×${p.h} · ${r.length} colours</div><div style="margin-top:7px" class="row"><span class="pill ${have===r.length?'ok':'need'}">${have===r.length?'All floss in stash':`${r.length-have} colours to buy`}</span>${p.onList?'<span class="pill part">On list</span>':''}</div></div>`;
-  b.querySelector('.pthumb').appendChild(thumb(p,150));g.appendChild(b)})}
+  b.innerHTML=`<div class="pthumb"></div><div class="pmeta"><b>${esc(p.name)}</b><div class="small muted">${p.kind==='pdf'?'PDF pattern':p.w+'×'+p.h} · ${r.length} colours</div><div style="margin-top:7px" class="row">${r.length?`<span class="pill ${have===r.length?'ok':'need'}">${have===r.length?'All floss in stash':`${r.length-have} colours to buy`}</span>`:'<span class="pill part">No floss listed</span>'}${p.onList?'<span class="pill part">On list</span>':''}</div></div>`;
+  if(p.kind==='pdf'){if(p.thumb){const im=new Image();im.src=p.thumb;im.alt='';im.className='pdfthumb';b.querySelector('.pthumb').appendChild(im)}}else b.querySelector('.pthumb').appendChild(thumb(p,150));g.appendChild(b)})}
 $('#pGrid').addEventListener('click',e=>{const b=e.target.closest('.pcard');if(b)openPattern(b.dataset.id)});
 function openPattern(id){const p=S.patterns[id];if(!p)return;$('#patListWrap').hidden=true;const v=$('#patView');v.hidden=false;
  v.innerHTML=`<button class="btn ghost back">← All patterns</button><div class="vbody"></div>`;v.querySelector('.back').onclick=()=>closePattern();
  PS.tool='view';PS.brush=null;PS.undo=[];
+ if(p.kind==='pdf'){PV.view=makePdfViewer(v.querySelector('.vbody'),{...p,floss:p.floss.map(f=>({...f})),file:{...p.file}});window.scrollTo(0,0);return}
  PV.view=makeViewer(v.querySelector('.vbody'),{...p,cells:Uint8Array.from(p.cells),palette:p.palette.slice()},false);window.scrollTo(0,0)}
-function closePattern(force){if(!force&&PV.view&&PV.view.isDirty()){toast('Save or discard your changes first');return}PV.view=null;$('#patView').hidden=true;$('#patView').innerHTML='';$('#patListWrap').hidden=false}
+function closePattern(force){if(!force&&PV.view&&PV.view.isDirty()){toast('Save or discard your changes first');return}if(PV.view&&PV.view.destroy)PV.view.destroy();PV.view=null;$('#patView').hidden=true;$('#patView').innerHTML='';$('#patListWrap').hidden=false}
 document.querySelector('nav a[data-tab="patterns"]').addEventListener('click',()=>{if(location.hash==='#patterns')closePattern()});
 
 /* ---------- shopping ---------- */
